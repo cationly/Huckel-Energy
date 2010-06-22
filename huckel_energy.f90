@@ -5,8 +5,15 @@
 ! can be given in units of the off-diagonal hamiltonian elements and the
 ! 0-energy taken to be the average energy ( the diagonal hamiltonian elements)
 !
-! The hamiltonian is stored in a file calles "hamiltonian.ham" in the same directory 
+! The hamiltonian is stored in a file called "hamiltonian.ham" in the same directory 
 ! as the executable
+!
+! INPUT FILE FORMAT: lines beginning with "#" are comments, and may onyl occur at the
+!                    start of the file. The first non-comment line must contain
+!                    only a single integer which gives us the dimension of the hamiltonian contained in the
+!                    remainder of the file. The remainder of the file is a space separated matrix of 1s and 0s
+!                    where 1s are the non-0 hamiltonian matrix elements between the Huckel basis functions, and
+!                    the 0s are 0 elements or the diagonal elements
 !
 !TODO: add support for hamiltonian calculation based on molecule structure? 
 
@@ -31,7 +38,7 @@ contains function parseArray(inFile)
     integer, dimension(:,:) intent(out) :: array
     
     !TODO: read in space separated list of single precision numbers to array "hamiltonian"
-    
+     
 
 
     return
