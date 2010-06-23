@@ -1,0 +1,115 @@
+ In file huckel_energy.f95:49
+
+if(isSymmetric(hamiltonian) .ne. 0) then ! no way to recover from asymmetric ha
+  1
+Error: Function 'issymmetric' at (1) has no IMPLICIT type
+ In file huckel_energy.f95:120
+
+    rows: do i=lbound(array,1),ubound(array,1)
+             1
+Error: Symbol 'i' at (1) has no IMPLICIT type
+ In file huckel_energy.f95:121
+
+        read(unit=10,fmt=*) (array(i,j), j=lbound(array,2),ubound(array,2)) ! b
+                                     1
+Error: Symbol 'j' at (1) has no IMPLICIT type
+ In file huckel_energy.f95:145
+
+            do i=lbound(matrix,1),ubound(matrix,1)
+               1
+Error: Symbol 'i' at (1) has no IMPLICIT type
+ In file huckel_energy.f95:146
+
+                write(outUnit,fmt=frm) (matrix(i,j), j=lbound(matrix,2), ubound
+                                                 1
+Error: Symbol 'j' at (1) has no IMPLICIT type
+ In file huckel_energy.f95:193
+
+    character(len=50), intent(inout) :: outFile
+                                              1
+Error: Symbol at (1) is not a DUMMY variable
+ In file huckel_energy.f95:227
+
+    real, dimension(:) :: w ork                            ! necessary argument
+                          1
+Error: Syntax error in data declaration at (1)
+ In file huckel_energy.f95:236
+
+    whichTriangle = 'U'
+                1
+Error: Expected VARIABLE at (1)
+ In file huckel_energy.f95:246
+
+        calcmode
+       1
+Error: Unclassifiable statement at (1)
+ In file huckel_energy.f95:248
+
+    if(precisionMode .ne. 'S' .or. precisionMode .ne. 'D')
+                                                         1
+Error: Unclassifiable statement in IF-clause at (1)
+ In file huckel_energy.f95:250
+
+    end if 
+      1
+Error: Expecting END SUBROUTINE statement at (1)
+ In file huckel_energy.f95:252
+
+    allocate(work(lwork))
+                1
+Error: Syntax error in ALLOCATE statement at (1)
+ In file huckel_energy.f95:274
+
+        deallocate(eigenvalues
+                             1
+Error: Syntax error in DEALLOCATE statement at (1)
+ In file huckel_energy.f95:255
+
+,work,lwork,exitStatus)
+    1
+Error: Symbol 'work' at (1) has no IMPLICIT type
+ In file huckel_energy.f95:241
+
+        deallocate(eigenvalues)
+                             1
+Error: Expression in DEALLOCATE statement at (1) must be ALLOCATABLE or a POINTER
+ In file huckel_energy.f95:242
+
+        allocate(eigenvalues(systemSize))
+                           1
+Error: Expression in ALLOCATE statement at (1) must be ALLOCATABLE or a POINTER
+ In file huckel_energy.f95:266
+
+        deallocate(toDiagonalize)
+                               1
+Error: Expression in DEALLOCATE statement at (1) must be ALLOCATABLE or a POINTER
+ In file huckel_energy.f95:267
+
+        deallocate(eigenvalues)
+                             1
+Error: Expression in DEALLOCATE statement at (1) must be ALLOCATABLE or a POINTER
+ In file huckel_energy.f95:273
+
+        deallocate(toDiagonalize)
+                               1
+Error: Expression in DEALLOCATE statement at (1) must be ALLOCATABLE or a POINTER
+ In file huckel_energy.f95:285
+
+    integer,intent(inout) :: isSymmetric               ! return: 0 on success, 
+                                       1
+Error: PROCEDURE attribute conflicts with INTENT attribute at (1)
+ In file huckel_energy.f95:295
+
+    rows: do i=lbound(array,1),ubound(array,1)
+             1
+Error: Symbol 'i' at (1) has no IMPLICIT type
+ In file huckel_energy.f95:296
+
+        columns: do j=i+1,ubound(array,2)     ! only need to check upper triang
+                    1
+Error: Symbol 'j' at (1) has no IMPLICIT type
+ In file huckel_energy.f95:287
+
+    if(shape(array,1) .ne. shape(array,2)) then       ! if the array is not squ
+                         1
+Error: Too many arguments in call to 'shape' at (1)

@@ -31,14 +31,13 @@ program huckelEnergy
 implicit none
 character(len=*), parameter :: inFile = 'hamiltonian.ham' !  file containing our hamiltonian
 character(len=50) :: outFile       ! file to write to
-real, dimension(:,:), allocatable :: hamiltonian ! we don't know how big a system we are dealing with yet
+real, allocatable, dimension(:,:) :: hamiltonian ! we don't know how big a system we are dealing with yet
 integer :: systemSize ! the size of system (i.e. hamiltonian dimensions)
 !TODO: include more variables to store eigenvalues (dont yet know format of LAPACK output
-character(len=1) :: calcMode      ! "N" to compute just eigenvalues; "V" to compute eigenvectors aswel
-character(len=1) :: precisionMode ! "S" for single precision, "D" for double
-real, dimension(*), allocatable :: eigenvalues
+character(len=1) :: calcMode,precisionMode      ! "N" to compute just eigenvalues; "V" to compute eigenvectors aswel: "S" for single precision, "D" for double
+real, allocatable, dimension(:) :: eigenvalues
 
-getData(inFile,systemSize,precisionMode,calcMode,outFile) ! read system data from our input file
+call getData(inFile,systemSize,precisionMode,calcMode,outFile) ! read system data from our input file
 
 allocate(hamiltonian(systemSize,systemSize))   ! now all the hamiltonian attributes (shape) are set
 allocate(eigenvalues(systemSize))
@@ -51,25 +50,29 @@ if(isSymmetric(hamiltonian) .ne. 0) then ! no way to recover from asymmetric ham
     deallocate(hamiltonian)
     deallocate(eigenvalues)
     stop
-endif
+end if
 
-diagonalize(hamiltonian,eigenvalues,calcMode,precisionMode)
+call diagonalize(hamiltonian,eigenvalues,calcMode,precisionMode)
 
 open(unit=10,file=outFile,action="WRITE",status="NEW")
-if(calcMode='N') printOutput(eigenvalues,10) ! if only eigenvalues calculated, only print eigenvalues..
-else printOutput(eigenvalues,hamiltonian,10) ! else print the eigenvectors too
+if(calcMode .eq. 'N') then
+    call printOutput(eigenvalues,10) ! if only eigenvalues calculated, only print eigenvalues..
+else 
+    call printOutput(eigenvalues,hamiltonian,10) ! else print the eigenvectors too
+end if
 close(10)
 
 deallocate(hamiltonian)
 deallocate(eigenvalues)
 ! >>> END
+end program huckelEnergy
 
 subroutine getData(inFile,systemSize,precisionMode,calcMode,outFile) !TODO: test, more error handling
 ! function to return the size of the hamiltonian stored in the file
     implicit none
     integer, intent(out) :: systemSize
     character(len=1), intent(out) :: precisionMode, calcMode
-    character(len=2), intent(inout) :: temp
+    character(len=2) :: temp
     character(len=*), intent(in) :: inFile
     character(len=50), intent(out) :: outFile
 
@@ -80,25 +83,27 @@ subroutine getData(inFile,systemSize,precisionMode,calcMode,outFile) !TODO: test
     close(10)
 
     outFile = trim(adjustl(outFile)) ! trim it down
-    case select(index(temp,'N')+index(temp,'V')) ! test which is present
-    case(1)
-        if(index(temp,'N') .ne. 0) calcMode = 'N'
-        else calcMode = 'V'
-        endif
-    case default
+    if(index(temp,'N')+index(temp,'V') .eq. 1) then ! test which is present
+        if(index(temp,'N') .ne. 0) then
+            calcMode = 'N'
+        else 
+            calcMode = 'V'
+        end if
+    else
         write(*,*) 'WARNING: no calculation mode specified (or multiple specified) in input file: choosing "N"...'
         calcMode = 'N' 
-    end select
+    end if
 
-    case select(index(temp,'S')+index(temp,'D')) ! and the same with the precision
-    case(1)
-        if(index(temp,'S') .ne. 0) precisionMode = 'S'
-        else precisionMode = 'D'
-        endif
-    case default
+    if(index(temp,'S')+index(temp,'D') .eq. 1) then ! and the same with the precision
+        if(index(temp,'S') .ne. 0) then
+            precisionMode = 'S'
+        else 
+            precisionMode = 'D'
+        end if
+    else
         write(*,*) 'WARNING: no precision mode specified (or multiple specified) in the input file: choosing double precision'
         precisionMode = 'S'
-    end select
+    end if
     
     return
   
@@ -108,18 +113,18 @@ subroutine parseArray(inFile,array) !TODO:test, add in error handling
 ! Parse the array from the file to the array variable 
     implicit none
     character(len=*), intent(in) :: inFile
-    real, dimension(:,:) intent(out) :: array ! does the array carry over its attributes like shape? better play it safe...
+    real, dimension(:,:), intent(out) :: array 
 
     ! only need the upper triangle, as this is all the LAPACK routine, SSYEV needs 
     open(10,file=inFile,action="read")
     rows: do i=lbound(array,1),ubound(array,1)
-        read(10,*) (array(i,j), j=lbound(array,2),ubound(array,2)) ! best to have whole matrix stored just to be safe
-    end do rows                                                   ! the extra computing power will be trivial for my hamiltonians
+        read(unit=10,fmt=*) (array(i,j), j=lbound(array,2),ubound(array,2)) ! best to have whole matrix stored just to be safe
+    end do rows                                                             ! the extra computing power will be trivial for my hamiltonians
     close(10)
     
     return
 
-end function parseArray
+end subroutine parseArray
 
 subroutine printMatrix(matrix,outUnit) ! TODO: test, add in error handling
     ! write the array to stdout
@@ -134,20 +139,20 @@ subroutine printMatrix(matrix,outUnit) ! TODO: test, add in error handling
     write(rowLength,*) size(matrix,2) ! workaround to get my format statement working: doesn't work with direct concetenation
     frm = frmBase(1:1)//trim(adjustl(rowLength))//frmBase(2:) ! set up the format string
     
-    if(present(outUnit) then ! if the optional unit number is given, write there
+    if(present(outUnit)) then ! if the optional unit number is given, write there
         inquire(unit=outUnit,opened=isOpen)
         if(isOpen) then
             do i=lbound(matrix,1),ubound(matrix,1)
                 write(outUnit,fmt=frm) (matrix(i,j), j=lbound(matrix,2), ubound(matrix,2))
             end do
             return
-        endif
+        end if
     else ! go to standard output
         do i=lbound(matrix,1),ubound(matrix,1)
         write(*,fmt=frm) (matrix(i,j), j=lbound(matrix,2), ubound(matrix,2))
         end do
         return
-    endif
+    end if
 
 end subroutine printMatrix
 
@@ -164,16 +169,17 @@ subroutine printVector(vector,outUnit)
     write(rowLength,*) size(vector) ! workaround to get my format statement working: doesn't work with direct concetenation
     frm = frmBase(1:1)//trim(adjustl(rowLength))//frmBase(2:) ! set up the format string
     
-    if(present(outUnit) then ! if the optional unit number is given, write there
+    if(present(outUnit)) then ! if the optional unit number is given, write there
         inquire(unit=outUnit,opened=isOpen)
         if(isOpen) then
                 write(outUnit,fmt=frm) vector
                 return
-        endif
+        end if
     else ! go to standard output
         write(*,fmt=frm) vector
         return
-    endif
+    end if
+    
     return
 
 end subroutine printVector
@@ -182,7 +188,7 @@ subroutine printOutput(vector,matrix,outUnit) ! TODO: finish subroutine
     implicit none
     real, dimension(:,:),optional, intent(in) :: matrix ! matrix of eigenvalues
     real, dimension(:), intent(in) :: vector
-    integer, intent(in), optional :: outUnit ! stream to print to 
+    integer,optional, intent(in) :: outUnit ! stream to print to 
     logical, save :: isOpen = .false.
     character(len=50), intent(inout) :: outFile
     
@@ -195,19 +201,19 @@ subroutine printOutput(vector,matrix,outUnit) ! TODO: finish subroutine
             if(present(matrix)) then
                 write(outUnit,'(/,A,/)') "Eigenvectors of this hamiltonian are:"
                 call printMatrix(matrix,outUnit)
-            endif
+            end if
         else
             write(*,*) "WARNING: the specified unit os not open for writing; no output written"
             return
-        endif
+        end if
     else !print to stdout
          write(outUnit,'(A,/)') "Eigenvalues of this hamiltonian are:"
          call printVector(vector)
          if(present(matrix)) then
              write(outUnit,'(/,A,/)') "Eigenvectors of this hamiltonian are:"
              call printMatrix(matrix)
-         endif
-    endif
+         end if
+    end if
     return
 
 end subroutine printOutput
@@ -218,9 +224,9 @@ subroutine diagonalize(toDiagonalize,eigenvalues,calcMode,precisionMode) ! TODO:
     implicit none
     real, dimension(:,:), intent(inout) :: toDiagonalize   ! array that needs to be altered by lapack routine (hamiltonian)
     real, dimension(:), intent(inout) :: eigenvalues       ! array holding the eigenvalues
-    real, dimension(:), intent(inout) ::  work              ! necessary arguments to do with efficiency I think...
-    integer, intent(inout) :: systemSize,lwork,exitStatus  ! no need to make repeated SIZE() calls, also exit status information from subr    
-    character(len=1), intent(inout) :: calcMode                ! which modes to use with the LAPACK routine
+    real, dimension(:) :: w ork                            ! necessary arguments to do with efficiency I think...
+    integer :: systemSize,lwork,exitStatus                 ! no need to make repeated SIZE() calls, also exit status information from subr    
+    character(len=1), intent(inout) :: calcMode            ! which modes to use with the LAPACK routine
     character(len=1), intent(inout) :: precisionMode       ! single or double precision
     character(len=1), parameter :: whichTriangle='U'       ! use the upper or lower triangle of the hamiltonian matrix
     
@@ -230,27 +236,26 @@ subroutine diagonalize(toDiagonalize,eigenvalues,calcMode,precisionMode) ! TODO:
     whichTriangle = 'U'
     
     ! just check we've been passed good arguments
-    if(size(eigenvalues,1) .ne. systemSize) then 
+    if(size(eigenvalues) .ne. systemSize) then 
         write(*,*) 'WARNING: bad eigenvalue array passed to DIAGONALIZE; reallocating...'
         deallocate(eigenvalues)
         allocate(eigenvalues(systemSize))
-    endif
+    end if
     if(calcMode .ne. 'N' .or. calcMode .ne. 'V') then
         write(*,*) 'WARNING: bad calculation mode:', calcMode, ' passed to DIAGONALIZE; changing to "N"...'
         calcmode
-    endif
-    if(precisionMode .ne 'S' .or. precisionMode .ne. 'D')
+    end if
+    if(precisionMode .ne. 'S' .or. precisionMode .ne. 'D')
         write(*,*) 'WARNING: bad precision mode:', precisionMode, ' passed to DIAGONALIZE; changing to "S"...'
-    endif 
+    end if 
     ! actually call the LAPACK routine (after all that hassle)
     allocate(work(lwork))
     
-    select case precisionMode
-    case('S')
-        SSEYV(calcMode,whichTriangle,systemSize,toDiagonalize,systemSize,eigenvalues,work,lwork,exitStatus)
-    case('D') 
-        DSEYV(calcMode,whichTriangle,systemSize,toDiagonalize,systemSize,eigenvalues,work,lwork,exitStatus)
-    end select
+    if(precisionMode .eq. 'S') then
+        call SSEYV(calcMode,whichTriangle,systemSize,toDiagonalize,systemSize,eigenvalues,work,lwork,exitStatus)
+    else 
+        call DSEYV(calcMode,whichTriangle,systemSize,toDiagonalize,systemSize,eigenvalues,work,lwork,exitStatus)
+    end if
 
     deallocate(work)
     
@@ -259,23 +264,25 @@ subroutine diagonalize(toDiagonalize,eigenvalues,calcMode,precisionMode) ! TODO:
     case(-9:-1)
         write(*,*) 'FATAL: bad argument number:', exitStatus, ' passed to LAPACK subroutine...' ! drama queen...
         deallocate(toDiagonalize)
+        deallocate(eigenvalues)
         stop
     case(0) ! all clear
         return
     case default
         write(*,*) 'FATAL: LAPACK subroutine failed to converge...'
         deallocate(toDiagonalize)
+        deallocate(eigenvalues
         stop
     end select
 
 end subroutine diagonalize
 
-function isSymmetric(array) ! TODO:test, add in more error handling?
+integer function isSymmetric(array) ! TODO:test, add in more error handling?
 ! test whether the parsed hamiltonian is symmetric (as it must be)
 
     implicit none
     real, dimension(:,:), intent(in) :: array      ! array to test for symmetry (hamlitonian must be symmetric)
-    integer, intent(out) :: isSymmetric               ! return: 0 on success, 1 if not symmetric, 2 if not the correct shape
+    integer,intent(inout) :: isSymmetric               ! return: 0 on success, 1 if not symmetric, 2 if not the correct shape
     
     if(shape(array,1) .ne. shape(array,2)) then       ! if the array is not square 
         write(*,*)
@@ -299,4 +306,4 @@ function isSymmetric(array) ! TODO:test, add in more error handling?
     return
 end function isSymmetric 
 
-end program huckelEnergy
+
