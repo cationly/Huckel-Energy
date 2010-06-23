@@ -42,6 +42,7 @@ call printArray(hamiltonian,systemSize)
 if(isSymmetric(hamiltonian) .ne. 0) then ! no way to recover from asymmetric hamiltonian
     deallocate(hamiltonian)
     stop
+endif
 
 diagonalize(hamiltonian,eigenvectors,calcMode)
 
