@@ -1,50 +1,6 @@
-huckel_energy.f95:49.3:
+ In file huckel_energy.f95:318
 
-if(isSymmetric(hamiltonian) .ne. 0) then ! no way to recover from asymmetric ha
-   1
-Error: Function 'issymmetric' at (1) has no IMPLICIT type
-huckel_energy.f95:125.14:
-
-    rows: do i=lbound(array,1),ubound(array,1)
-              1
-Error: Symbol 'i' at (1) has no IMPLICIT type
-huckel_energy.f95:126.38:
-
-        read(unit=10,fmt=*) (array(i,j), j=lbound(array,2),ubound(array,2)) ! b
-                                      1
-Error: Symbol 'j' at (1) has no IMPLICIT type
-huckel_energy.f95:150.16:
-
-            do i=lbound(matrix,1),ubound(matrix,1)
-                1
-Error: Symbol 'i' at (1) has no IMPLICIT type
-huckel_energy.f95:151.50:
-
-                write(outUnit,fmt=frm) (matrix(i,j), j=lbound(matrix,2), ubound
-                                                  1
-Error: Symbol 'j' at (1) has no IMPLICIT type
-huckel_energy.f95:290.19:
-
-    if(shape(array)(1) .ne. shape(array)(2)) then       ! if the array is not s
-                   1
-Error: Syntax error in IF-expression at (1)
-huckel_energy.f95:295.7:
-
-    end if  
-       1
-Error: Expecting END FUNCTION statement at (1)
-huckel_energy.f95:298.14:
-
-    rows: do i=lbound(array,1),ubound(array,1)
-              1
-Error: Symbol 'i' at (1) has no IMPLICIT type
-huckel_energy.f95:283:
-
-function isSymmetric(array) ! TODO:test, add in more error handling?
-1
-Error: Symbol at (1) is not a DUMMY variable
-huckel_energy.f95:299.21:
-
-        columns: do j=i+1,ubound(array,2)     ! only need to check upper triang
-                     1
-Error: Symbol 'j' at (1) has no IMPLICIT type
+end function isSymmetric 
+  1
+Error: Expecting END SUBROUTINE statement at (1)
+Error: Unexpected end of file in 'huckel_energy.f95'
