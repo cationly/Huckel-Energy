@@ -36,14 +36,27 @@ real, allocatable, dimension(:) :: eigenvalues
 integer :: systemSize,exitStatus ! the size of system (i.e. hamiltonian dimensions), and the exitStatus of our subroutines, changed each time it is passed
 character(len=1) :: calcMode,precisionMode      ! "N" to compute just eigenvalues; "V" to compute eigenvectors aswel: "S" for single precision, "D" for double
 logical :: Symettric                            ! take a guess...
-
+!DEBUG
+integer :: i,j
+!END DEBUG
 call getParams(inFile,systemSize,precisionMode,calcMode,outFile) ! read system data from our input file
 
+!DEBUG
+ write(*,*) 'System size in main loop:', systemSize
+ write(*,*) 'main loop precisionMode:' , precisionMode
+ write(*,*) 'main loop calcMode:', calcMode
+!END DEBUG
 allocate(hamiltonian(systemSize,systemSize))   ! now all the hamiltonian attributes (shape) are set
 allocate(eigenvalues(systemSize))
-call parseArray(inFile,hamiltonian)            ! read in the hamiltonian from file
 
-call isSymmetric(hamiltonian,exitStatus)
+call parseArray(inFile,hamiltonian,systemSize)            ! read in the hamiltonian from file
+! DEBUG: call printMatrix(hamiltonian,systemSize)
+    !DEBUG 
+    do i=1,systemSize
+        write(*,'(3(F2.0,X))') (hamiltonian(i,j), j=1,systemSize)
+    end do   
+    !END DEBUG
+call isSymmetric(hamiltonian,systemSize,exitStatus)
 if(exitStatus .ne. 0) then ! no way to recover from asymmetric hamiltonian
     deallocate(hamiltonian)
     deallocate(eigenvalues)
@@ -51,20 +64,22 @@ if(exitStatus .ne. 0) then ! no way to recover from asymmetric hamiltonian
 end if
 
 write(*,*) 'diagonalizing the hamiltonian:' ! output to give user a visual
-call printMatrix(hamiltonian,systemSize)
-call diagonalize(hamiltonian,eigenvalues,calcMode,precisionMode,exitStatus) ! eigenvalues is unallocated vector
+call printmatrix(hamiltonian,systemSize)
+call diagonalize(hamiltonian,eigenvalues,systemSize,calcMode,precisionMode,exitStatus) ! eigenvalues is unallocated vector
 if(exitStatus .ne. 0) then ! if there were problems
     deallocate(hamiltonian)
     deallocate(eigenvalues)
     stop
 end if
-
+!call printMatrix(hamiltonian)
+call printVector(eigenvalues,systemSize)
 ! Print our output to the specified file
-open(unit=10,file=outFile,action="WRITE",status="NEW")
+call printOutput(eigenvalues,hamiltonian,systemSize)
+open(unit=10,file=outFile,action="WRITE",status="REPLACE")
 if(calcMode .eq. 'N') then
-    call printOutput(eigenvalues,10) ! if only eigenvalues calculated, only print eigenvalues..
+    call printOutput(eigenvalues,systemSize,10) ! if only eigenvalues calculated, only print eigenvalues..
 else 
-    call printOutput(eigenvalues,hamiltonian,10) ! else print the eigenvectors too
+    call printOutput(eigenvalues,hamiltonian,systemSize,10) ! else print the eigenvectors too
 end if
 close(10)
 
@@ -83,117 +98,119 @@ subroutine getParams(inFile,systemSize,precisionMode,calcMode,outFile) !TODO: te
 
     open(10,file=inFile,action="read")
     read(10,fmt='(A50)') outFile         ! outfile name up to 50 characters long
-    read(10,'(A2)') temp                 ! this line contains the calculation mode and the precision
+    read(10,'(A1)') precisionMode         ! this line contains the precision (single or double)
+    read(10,'(A1)') calcMode              ! just eigenvalues or eigenvalues and eigenvectors?
     read(10,'(I2)') systemSize           ! hamiltonian dimensions
     close(10)
     
     !DEBUG
      write(*,*) outFile
-     write(*,*) temp
+     write(*,*) precisionMode
+     write(*,*) calcMode
      write(*,*) systemSize
-     write(*,*) index(temp,'N') + index(temp,'V')
-     write(*,*) index(temp,'S') + index(temp,'D')
     ! END DEBUG
  
-    outFile = trim(adjustl(outFile)) ! trim it down
-    if(index(temp,'N')+index(temp,'V') .eq. 1 ) then ! test which is present
-        if(index(temp,'N') .ne. 0) then
-            calcMode = 'N'
-        else 
-            calcMode = 'V'
-        end if
-    else
-        write(*,*) 'WARNING: no calculation mode specified (or multiple specified) in input file: choosing "N"...'
-        calcMode = 'N' 
-    end if
-
-    if(index(temp,'S')+index(temp,'D') .eq. 1) then ! and the same with the precision
-        if(index(temp,'S') .ne. 0) then
-            precisionMode = 'S'
-        else 
-            precisionMode = 'D'
-        end if
-    else
+    if(precisionMode .ne. 'D' .or. precisionMode .ne. 'S') then    
         write(*,*) 'WARNING: no precision mode specified (or multiple specified) in the input file: choosing double precision'
         precisionMode = 'D'
     end if
+    
+    if(calcMode .ne. 'N' .or. calcMode .ne. 'V') then 
+        write(*,*) 'WARNING: invalid calculation mode in input file: choosing "N"...'
+        calcMode = 'N' 
+    end if
+
     
     return
   
 end subroutine getParams
 
-subroutine parseArray(inFile,array) !TODO:test, add in error handling
+subroutine parseArray(inFile,array,systemSize) !TODO:test, add in error handling
 ! Parse the array from the file to the array variable 
     implicit none
     character(len=*), intent(in) :: inFile     
-    real, dimension(:,:), intent(out) :: array ! the array to parse the stuff to
-    integer :: i,j                             ! loop variables
+    integer, intent(in) :: systemSize 
+    real, dimension(systemSize,systemSize), intent(out) :: array ! the array to parse the stuff to
+    character(len=20) :: frmBase = '((F1.0,X))'   ! the form of 1 "entry" of input
+    character(len=20) :: frm                      ! output format string
+    character(len=20) :: rowLength                ! how long is the output?
+    integer :: i,j                                ! loop variables 
+   !DEBUG
+    character(len=50) :: tmp 
+    integer :: temp
+   !END DEBUG
+
+    write(rowLength,*) systemSize                 ! workaround to get my format statement working: doesn't work with direct concetenation
+    frm = frmBase(1:1)//trim(adjustl(rowLength))//frmBase(2:) ! set up the format string
     
     open(10,file=inFile,action="read")
-    read(10,fmt='(A)')          ! advance past the outfile, calculation parameters and array size
-    read(10,fmt='(A)')
-    read(10,fmt='(I2)')
-    
-    rows: do i=lbound(array,1),ubound(array,1)
-        read(unit=10,fmt=*) (array(i,j), j=lbound(array,2),ubound(array,2)) ! best to have whole matrix stored just to be safe, even though Lapack only needs 1 triangle
-    end do rows                                                             ! the extra computing power will be trivial for my hamiltonians
+    read(10,*)          ! advance past the outfile, calculation parameters and array size
+    read(10,*) 
+    read(10,*)
+    read(10,*) 
+
+    rows: do i=1,systemSize
+        read(unit=10,fmt=frm) (array(i,j), j=1,systemSize)    ! best to have whole matrix stored just to be safe, even though Lapack only needs 1 triangle
+    end do rows                                             ! the extra computing power will be trivial for my hamiltonians
     close(10)
     
     return
 
 end subroutine parseArray
 
-subroutine printMatrix(matrix,outUnit) ! TODO: test, add in error handling
+subroutine printMatrix(matrix,matSize,outUnit) ! TODO: test, add in error handling
     ! write the array to stdout
     implicit none
-    real,dimension(:,:), intent(in) :: matrix
+    integer, intent(in) :: matSize
+    real,dimension(matSize,matSize), intent(in) :: matrix
     integer, intent(in),optional :: outUnit       ! the stream to print to 
     logical,save :: isOpen = .false.              ! set to true if stream is open, false if not 
     character(len=20) :: frmBase = '((F6.3,X))'   ! the form of 1 "entry" of output
     character(len=20) :: frm                      ! output format string
     character(len=20) :: rowLength                ! how long is the output?
     integer :: i,j                                ! loop variables 
-    write(rowLength,*) size(matrix,2) ! workaround to get my format statement working: doesn't work with direct concetenation
+    write(rowLength,*) matSize                 ! workaround to get my format statement working: doesn't work with direct concetenation
     frm = frmBase(1:1)//trim(adjustl(rowLength))//frmBase(2:) ! set up the format string
     
     if(present(outUnit)) then ! if the optional unit number is given, write there
         inquire(unit=outUnit,opened=isOpen)
         if(isOpen) then
-            do i=lbound(matrix,1),ubound(matrix,1)
-                write(outUnit,fmt=frm) (matrix(i,j), j=lbound(matrix,2), ubound(matrix,2))
+            do i=1,matSize
+                write(outUnit,fmt=frm) (matrix(i,j), j=1, matsize)
             end do
             return
         end if
     else ! go to standard output
-        do i=lbound(matrix,1),ubound(matrix,1)
-        write(*,fmt=frm) (matrix(i,j), j=lbound(matrix,2), ubound(matrix,2))
+        do i=1,matSize
+            write(*,fmt=frm) (matrix(i,j), j=1, matSize)
         end do
         return
     end if
 
 end subroutine printMatrix
 
-subroutine printVector(vector,outUnit)
+subroutine printVector(vector,vecSize,outUnit)
 
     implicit none
-    real,dimension(:), intent(in) :: vector
+    integer, intent(in) :: vecSize
+    real,dimension(vecsize), intent(in) :: vector
     integer, intent(in),optional :: outUnit   ! the stream to print to 
     logical,save :: isOpen = .false.              ! set to true if stream is open, false if not 
     character(len=20) :: frmBase = '((F7.4,X))'   ! the form of 1 "entry" of output
     character(len=20) :: frm                    ! output format string
     character(len=20) :: rowLength              ! how long is the output?
-    
-    write(rowLength,*) size(vector) ! workaround to get my format statement working: doesn't work with direct concetenation
+    integer :: i
+    write(rowLength,*) vecSize ! workaround to get my format statement working: doesn't work with direct concetenation
     frm = frmBase(1:1)//trim(adjustl(rowLength))//frmBase(2:) ! set up the format string
     
     if(present(outUnit)) then ! if the optional unit number is given, write there
         inquire(unit=outUnit,opened=isOpen)
         if(isOpen) then
-                write(outUnit,fmt=frm) vector
+                write(outUnit,fmt=frm) (vector(i), i=1,vecSize)
                 return
         end if
     else ! go to standard output
-        write(*,fmt=frm) vector
+        write(*,fmt=frm) (vector(i), i=1,vecSize)
         return
     end if
     
@@ -201,23 +218,24 @@ subroutine printVector(vector,outUnit)
 
 end subroutine printVector
 
-subroutine printOutput(vector,matrix,outUnit) ! TODO: finish subroutine
+subroutine printOutput(vector,matrix,systemSize,outUnit) ! TODO: finish subroutine
     implicit none
-    real, dimension(:,:),optional, intent(in) :: matrix ! matrix of eigenvalues
-    real, dimension(:), intent(in) :: vector
+    integer, intent(in) :: systemSize
+    real, dimension(systemSize,systemSize),optional, intent(in) :: matrix ! matrix of eigenvalues
+    real, dimension(systemSize), intent(in) :: vector
     integer,optional, intent(in) :: outUnit ! stream to print to 
     logical :: isOpen
-    
+
     isOpen = .false.
 
     if(present(outUnit)) then ! print to that unit
         inquire(unit=outUnit, opened=isOpen)
         if(isOpen) then
             write(outUnit,'(A,/)') "Eigenvalues of this hamiltonian are:"
-            call printVector(vector,outUnit)
+            call printVector(vector,systemSize,outUnit)
             if(present(matrix)) then
                 write(outUnit,'(/,A,/)') "Eigenvectors of this hamiltonian are:"
-                call printMatrix(matrix,outUnit)
+                call printMatrix(matrix,systemSize,outUnit)
             end if
         else
             write(*,*) "WARNING: the specified unit is not open for writing; no output written"
@@ -225,32 +243,31 @@ subroutine printOutput(vector,matrix,outUnit) ! TODO: finish subroutine
         end if
     else !print to stdout
          write(outUnit,'(A,/)') "Eigenvalues of this hamiltonian are:"
-         call printVector(vector)
+         call printVector(vector,systemSize)
          if(present(matrix)) then
              write(outUnit,'(/,A,/)') "Eigenvectors of this hamiltonian are:"
-             call printMatrix(matrix)
+             call printMatrix(matrix,systemSize)
          end if
     end if
     return
 
 end subroutine printOutput
 
-subroutine diagonalize(toDiagonalize,eigenvalues,calcMode,precisionMode,exitStatus) ! TODO: test, add in more error handling?
+subroutine diagonalize(toDiagonalize,eigenvalues,systemSize,calcMode,precisionMode,exitStatus) ! TODO: test, add in more error handling?
 ! keep the calls to LAPACK out of the way, maybe come up with a better interface later
     
     implicit none
-    real, dimension(:,:), intent(inout) :: toDiagonalize   ! array that needs to be altered by lapack routine (hamiltonian)
-    real, dimension(:), intent(inout) :: eigenvalues       ! array holding the eigenvalues
-    real, allocatable, dimension(:) :: tempVector
+    integer, intent(in) :: systemSize
+    real, dimension(systemSize,systemSize), intent(inout) :: toDiagonalize   ! array that needs to be altered by lapack routine (hamiltonian)
+    real, dimension(systemSize), intent(inout) :: eigenvalues       ! array holding the eigenvalues
     real, allocatable, dimension(:) :: work                            ! necessary arguments to do with efficiency I think...
-    integer :: systemSize,lwork                            ! no need to make repeated SIZE() calls, also exit status information from subr    
+    integer :: lwork                                             
     integer, intent(inout) :: exitStatus                              ! contains exit status
     character(len=1), intent(inout) :: calcMode            ! which modes to use with the LAPACK routine
     character(len=1), intent(inout) :: precisionMode       ! single or double precision
     character(len=1), parameter :: whichTriangle='U'       ! use the upper or lower triangle of the hamiltonian matrix
     
     exitStatus = 0
-    systemSize = size(toDiagonalize,1)
     lwork = 3*systemSize - 1
   
    ! TODO: find how to check array lengths and resize from within subroutine 
@@ -270,6 +287,10 @@ subroutine diagonalize(toDiagonalize,eigenvalues,calcMode,precisionMode,exitStat
     ! actually call the LAPACK routine (after all that hassle)
     allocate(work(lwork))
     
+    !DEBUG
+     write(*,*) 'system size in subr: ',systemSize
+     write(*,*) 
+    !END DEBUG    
     if(precisionMode .eq. 'S') then
         call SSYEV(calcMode,whichTriangle,systemSize,toDiagonalize,systemSize,eigenvalues,work,lwork,exitStatus)
     else 
@@ -292,26 +313,34 @@ subroutine diagonalize(toDiagonalize,eigenvalues,calcMode,precisionMode,exitStat
 
 end subroutine diagonalize
 
-subroutine isSymmetric(array,exitStatus) ! TODO:test, add in more error handling? 
+subroutine isSymmetric(array,systemSize,exitStatus) ! TODO:test, add in more error handling? 
 ! Is this necessary? Lapack only works with upper or lower triangle anyway...
 ! For large matrices would just specify the upper triangle in the inFile and then have the other elements as 0...
 ! should I do error handling outside the subroutine?
 ! test whether the parsed hamiltonian is symmetric (as it must be)
 ! return: 0 on success, 1 if not symmetric, 2 if not the correct shape
     implicit none
-    real, dimension(:,:), intent(in) :: array      ! array to test for symmetry (hamlitonian must be symmetric)           
+    integer, intent(in) :: systemSize
+    real, dimension(systemSize,systemSize), intent(in) :: array      ! array to test for symmetry (hamlitonian must be symmetric)           
     integer, intent(out) :: exitStatus             ! Nuff said
     integer :: i,j                                 ! loop variables 
-    if(size(array,1) .ne. size(array,2)) then       ! if the array is not square 
-        write(*,*)
-        write(*,*) 'FATAL: hamiltonian is not square' ! I love being dramatic
-        exitStatus = 2
-        return
-    end if  
     
+    ! now we just assume its square
+    !if(size(array,1) .ne. size(array,2)) then       ! if the array is not square 
+    !    write(*,*)
+    !    write(*,*) 'FATAL: hamiltonian is not square' ! I love being dramatic
+    !    exitStatus = 2
+    !    return
+    !end if  
+   
+    !DEBUG 
+    do i=1,systemSize
+        write(*,'(3(F2.0,X))') (array(i,j), j=1,systemSize)
+    end do   
+    !END DEBUG
     ! go through rows and columns check if array(i)(j)== array(j)(i), if not then set isSymmetric to 1
-    rows: do i=lbound(array,1),ubound(array,1)
-        columns: do j=i+1,ubound(array,2)     ! only need to check upper triangle 
+    rows: do i=1,systemSize
+        columns: do j=i,systemSize     ! only need to check upper triangle 
             if(array(i,j) .ne. array(j,i)) then
                 write(*,*)
                 write(*,*) 'FATAL: hamiltonian is not symmetric'

@@ -1,6 +1,13 @@
-my_first_hamiltonian.txt
-SN
-3
-0 1 0
-1 0 1
-0 1 0
+my_secondhamiltonian.txt
+S    <-- insert precision mode here 'S' or 'D'
+N    <-- insert output mode here 'N' or 'V'
+999999999    <-- insert hamiltonian size here
+0 1 0 0 0 0 0 0 1
+1 0 1 0 0 0 0 0 0
+0 1 0 1 0 0 0 0 0 
+0 0 1 0 1 0 0 0 0
+0 0 0 1 0 1 0 0 0
+0 0 0 0 1 0 1 0 0
+0 0 0 0 0 1 0 1 0 
+0 0 0 0 0 0 1 0 1
+1 0 0 0 0 0 0 1 0
