@@ -32,7 +32,7 @@ implicit none
 character(len=*), parameter :: inFile = 'hamiltonian.ham' !  file containing our hamiltonian
 character(len=50) :: outFile       ! file to write to
 real, allocatable, dimension(:,:) :: hamiltonian ! we don't know how big a system we are dealing with yet
-integer :: systemSize ! the size of system (i.e. hamiltonian dimensions)
+integer :: systemSize,exitStatus ! the size of system (i.e. hamiltonian dimensions)
 !TODO: include more variables to store eigenvalues (dont yet know format of LAPACK output
 character(len=1) :: calcMode,precisionMode      ! "N" to compute just eigenvalues; "V" to compute eigenvectors aswel: "S" for single precision, "D" for double
 real, allocatable, dimension(:) :: eigenvalues
@@ -52,7 +52,12 @@ if(isSymmetric(hamiltonian) .ne. 0) then ! no way to recover from asymmetric ham
     stop
 end if
 
-call diagonalize(hamiltonian,eigenvalues,calcMode,precisionMode)
+call diagonalize(hamiltonian,eigenvalues,calcMode,precisionMode,exitStatus) ! eigenvalues is unallocated vector
+if(exitStatus .ne. 0) then ! if there were problems
+    deallocate(hamiltonian)
+    deallocate(eigenvalues)
+    stop
+end if
 
 open(unit=10,file=outFile,action="WRITE",status="NEW")
 if(calcMode .eq. 'N') then
@@ -189,10 +194,10 @@ subroutine printOutput(vector,matrix,outUnit) ! TODO: finish subroutine
     real, dimension(:,:),optional, intent(in) :: matrix ! matrix of eigenvalues
     real, dimension(:), intent(in) :: vector
     integer,optional, intent(in) :: outUnit ! stream to print to 
-    logical, save :: isOpen = .false.
-    character(len=50), intent(inout) :: outFile
+    logical :: isOpen
     
-           
+    isOpen = .false.
+
     if(present(outUnit)) then ! print to that unit
         inquire(unit=outUnit, opened=isOpen)
         if(isOpen) then
@@ -218,14 +223,16 @@ subroutine printOutput(vector,matrix,outUnit) ! TODO: finish subroutine
 
 end subroutine printOutput
 
-subroutine diagonalize(toDiagonalize,eigenvalues,calcMode,precisionMode) ! TODO: test, add in more error handling?
+subroutine diagonalize(toDiagonalize,eigenvalues,calcMode,precisionMode,exitStatus) ! TODO: test, add in more error handling?
 ! keep the calls to LAPACK out of the way, maybe come up with a better interface later
     
     implicit none
     real, dimension(:,:), intent(inout) :: toDiagonalize   ! array that needs to be altered by lapack routine (hamiltonian)
     real, dimension(:), intent(inout) :: eigenvalues       ! array holding the eigenvalues
-    real, dimension(:) :: w ork                            ! necessary arguments to do with efficiency I think...
-    integer :: systemSize,lwork,exitStatus                 ! no need to make repeated SIZE() calls, also exit status information from subr    
+    real, allocatable, dimension(:) :: tempVector
+    real, allocatable, dimension(:) :: work                            ! necessary arguments to do with efficiency I think...
+    integer :: systemSize,lwork                            ! no need to make repeated SIZE() calls, also exit status information from subr    
+    integer, intent(inout) :: exitStatus                              ! contains exit status
     character(len=1), intent(inout) :: calcMode            ! which modes to use with the LAPACK routine
     character(len=1), intent(inout) :: precisionMode       ! single or double precision
     character(len=1), parameter :: whichTriangle='U'       ! use the upper or lower triangle of the hamiltonian matrix
@@ -233,20 +240,20 @@ subroutine diagonalize(toDiagonalize,eigenvalues,calcMode,precisionMode) ! TODO:
     exitStatus = 0
     systemSize = size(toDiagonalize,1)
     lwork = 3*systemSize - 1
-    whichTriangle = 'U'
+  
+   ! TODO: find how to check array lengths and resize from within subroutine 
+   ! if(allocated(eigenvalues)) then 
+   !     deallocate(eigenvalues)
+   !     allocate(eigenvalues(sysmtemSize)
+   ! end if
     
-    ! just check we've been passed good arguments
-    if(size(eigenvalues) .ne. systemSize) then 
-        write(*,*) 'WARNING: bad eigenvalue array passed to DIAGONALIZE; reallocating...'
-        deallocate(eigenvalues)
-        allocate(eigenvalues(systemSize))
-    end if
     if(calcMode .ne. 'N' .or. calcMode .ne. 'V') then
         write(*,*) 'WARNING: bad calculation mode:', calcMode, ' passed to DIAGONALIZE; changing to "N"...'
-        calcmode
+        calcmode = 'N'
     end if
-    if(precisionMode .ne. 'S' .or. precisionMode .ne. 'D')
+    if(precisionMode .ne. 'S' .or. precisionMode .ne. 'D') then
         write(*,*) 'WARNING: bad precision mode:', precisionMode, ' passed to DIAGONALIZE; changing to "S"...'
+        precisionMode = 'S'
     end if 
     ! actually call the LAPACK routine (after all that hassle)
     allocate(work(lwork))
@@ -263,33 +270,29 @@ subroutine diagonalize(toDiagonalize,eigenvalues,calcMode,precisionMode) ! TODO:
     select case(exitStatus)
     case(-9:-1)
         write(*,*) 'FATAL: bad argument number:', exitStatus, ' passed to LAPACK subroutine...' ! drama queen...
-        deallocate(toDiagonalize)
-        deallocate(eigenvalues)
-        stop
+        return
     case(0) ! all clear
         return
     case default
         write(*,*) 'FATAL: LAPACK subroutine failed to converge...'
-        deallocate(toDiagonalize)
-        deallocate(eigenvalues
-        stop
+        return
     end select
 
 end subroutine diagonalize
 
-integer function isSymmetric(array) ! TODO:test, add in more error handling?
+function isSymmetric(array) ! TODO:test, add in more error handling?
 ! test whether the parsed hamiltonian is symmetric (as it must be)
 
     implicit none
     real, dimension(:,:), intent(in) :: array      ! array to test for symmetry (hamlitonian must be symmetric)
-    integer,intent(inout) :: isSymmetric               ! return: 0 on success, 1 if not symmetric, 2 if not the correct shape
+    integer,intent(out) :: isSymmetric               ! return: 0 on success, 1 if not symmetric, 2 if not the correct shape
     
-    if(shape(array,1) .ne. shape(array,2)) then       ! if the array is not square 
+    if(size(array,1) .ne. size(array,2)) then       ! if the array is not square 
         write(*,*)
         write(*,*) 'FATAL: hamiltonian is not square' ! I love being dramatic
         isSymmetric = 2
         return
-    endif  
+    end if  
     
     ! go through rows and columns check if array(i)(j)== array(j)(i), if not then set isSymmetric to 1
     rows: do i=lbound(array,1),ubound(array,1)
