@@ -14,7 +14,7 @@
 !                    subsequent lines are a space separated list of matrix elements
 !
 !
-! IGNORE THIS FORMATTING
+! IGNORE THIS FORMATTING, MAYBE IMPLEMENT LATER, BUT NOW THERE IS NO NEED
 ! INPUT FILE FORMAT: lines beginning with "#" are comments. the line starting with a "@" must contain
 !                    only a single integer which gives us the dimension of the hamiltonian contained in the
 !                    remainder of the file. the line starting with "!" is the name of the file which the eigenvalues will be written to
@@ -24,19 +24,23 @@
 !                    the 0s are 0 elements or the diagonal elements
 !
 !TODO: add support for hamiltonian calculation based on molecule structure? 
-!TODO: write a printout function 
-!TODO: add in choice to choose single or double precision
+!TODO: store double precision declaration in separate module
+!TODO: take out choice for single or double precision (use double)
+!TODO: add in passing the output mode, input filename and output filename as command line args
+!TODO: change the documentation ^^ to reflect changes to user interface
+!TODO: implement new whitspace regime
 program huckelEnergy 
 
+use doublePrecision
 use parse   
 use printing
 use matrixOp
 
 implicit none
-character(len=*), parameter :: inFile = 'hamiltonian.ham' !  file containing our hamiltonian
+character(len=*), parameter :: inFile= 'hamiltonian.ham' !  file containing our hamiltonian
 character(len=50) :: outFile       ! file to write to
-real, allocatable, dimension(:,:) :: hamiltonian ! we don't know how big a system we are dealing with yet
-real, allocatable, dimension(:) :: eigenvalues
+real(kind=dp), allocatable, dimension(:,:) :: hamiltonian ! we don't know how big a system we are dealing with yet
+real(kind=dp), allocatable, dimension(:) :: eigenvalues
 integer :: systemSize,exitStatus ! the size of system (i.e. hamiltonian dimensions), and the exitStatus of our subroutines, changed each time it is passed
 character(len=1) :: calcMode,precisionMode      ! "N" to compute just eigenvalues; "V" to compute eigenvectors aswel: "S" for single precision, "D" for double
 !DEBUG

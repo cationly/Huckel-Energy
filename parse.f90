@@ -5,6 +5,8 @@
 
 module parse
 
+use doublePrecision
+
 implicit none 
 
 contains 
@@ -31,12 +33,12 @@ subroutine getParams(inFile,systemSize,precisionMode,calcMode,outFile) !TODO: te
      write(*,*) systemSize
     ! END DEBUG
  
-    if(precisionMode .ne. 'D' .or. precisionMode .ne. 'S') then    
+    if(.not.(precisionMode .eq. 'D' .or. precisionMode .eq. 'S')) then    
         write(*,*) 'WARNING: no precision mode specified (or multiple specified) in the input file: choosing double precision'
         precisionMode = 'D'
     end if
     
-    if(calcMode .ne. 'N' .or. calcMode .ne. 'V') then 
+    if(.not.(calcMode .eq. 'N' .or. calcMode .eq. 'V')) then 
         write(*,*) 'WARNING: invalid calculation mode in input file: choosing "N"...'
         calcMode = 'N' 
     end if
@@ -52,7 +54,7 @@ subroutine parseArray(inFile,array,systemSize) !TODO:test, add in error handling
     implicit none
     character(len=*), intent(in) :: inFile     
     integer, intent(in) :: systemSize 
-    real, dimension(systemSize,systemSize), intent(out) :: array ! the array to parse the stuff to
+    real(kind=dp), dimension(systemSize,systemSize), intent(out) :: array ! the array to parse the stuff to
     character(len=20) :: frmBase = '((F1.0,X))'   ! the form of 1 "entry" of input
     character(len=20) :: frm                      ! output format string
     character(len=20) :: rowLength                ! how long is the output?

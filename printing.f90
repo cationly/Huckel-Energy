@@ -5,6 +5,8 @@
 
 module printing
 
+use doublePrecision
+
 implicit none
 
 contains
@@ -13,7 +15,7 @@ subroutine printMatrix(matrix,matSize,outUnit) ! TODO: test, add in error handli
     ! write the array to stdout
     implicit none
     integer, intent(in) :: matSize
-    real,dimension(matSize,matSize), intent(in) :: matrix
+    real(kind=dp),dimension(matSize,matSize), intent(in) :: matrix
     integer, intent(in),optional :: outUnit       ! the stream to print to 
     logical,save :: isOpen = .false.              ! set to true if stream is open, false if not 
     character(len=20) :: frmBase = '((F6.3,X))'   ! the form of 1 "entry" of output
@@ -45,7 +47,7 @@ subroutine printVector(vector,vecSize,outUnit)
 
     implicit none
     integer, intent(in) :: vecSize
-    real,dimension(vecsize), intent(in) :: vector
+    real(kind=dp),dimension(vecsize), intent(in) :: vector
     integer, intent(in),optional :: outUnit   ! the stream to print to 
     logical,save :: isOpen = .false.              ! set to true if stream is open, false if not 
     character(len=20) :: frmBase = '((F7.4,X))'   ! the form of 1 "entry" of output
@@ -74,8 +76,8 @@ end subroutine printVector
 subroutine printOutput(vector,matrix,systemSize,outUnit) ! TODO: finish subroutine
     implicit none
     integer, intent(in) :: systemSize
-    real, dimension(systemSize,systemSize),optional, intent(in) :: matrix ! matrix of eigenvalues
-    real, dimension(systemSize), intent(in) :: vector
+    real(kind=dp), dimension(systemSize,systemSize),optional, intent(in) :: matrix ! matrix of eigenvalues
+    real(kind=dp), dimension(systemSize), intent(in) :: vector
     integer,optional, intent(in) :: outUnit ! stream to print to 
     logical :: isOpen
 

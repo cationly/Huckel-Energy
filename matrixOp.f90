@@ -5,6 +5,8 @@
 
 module matrixOp
 
+use doublePrecision
+
 implicit none
 
 contains 
@@ -14,9 +16,9 @@ subroutine diagonalize(toDiagonalize,eigenvalues,systemSize,calcMode,precisionMo
     
     implicit none
     integer, intent(in) :: systemSize
-    real, dimension(systemSize,systemSize), intent(inout) :: toDiagonalize   ! array that needs to be altered by lapack routine (hamiltonian)
-    real, dimension(systemSize), intent(inout) :: eigenvalues       ! array holding the eigenvalues
-    real, allocatable, dimension(:) :: work                            ! necessary arguments to do with efficiency I think...
+    real(kind=dp), dimension(systemSize,systemSize), intent(inout) :: toDiagonalize   ! array that needs to be altered by lapack routine (hamiltonian)
+    real(kind=dp), dimension(systemSize), intent(inout) :: eigenvalues       ! array holding the eigenvalues
+    real(kind=dp), allocatable, dimension(:) :: work                            ! necessary arguments to do with efficiency I think...
     integer :: lwork                                             
     integer, intent(inout) :: exitStatus                              ! contains exit status
     character(len=1), intent(inout) :: calcMode            ! which modes to use with the LAPACK routine
@@ -32,11 +34,11 @@ subroutine diagonalize(toDiagonalize,eigenvalues,systemSize,calcMode,precisionMo
    !     allocate(eigenvalues(sysmtemSize)
    ! end if
     
-    if(calcMode .ne. 'N' .or. calcMode .ne. 'V') then
+    if(.not.(calcMode .eq. 'N' .or. calcMode .eq. 'V')) then
         write(*,*) 'WARNING: bad calculation mode:', calcMode, ' passed to DIAGONALIZE; changing to "N"...'
         calcmode = 'N'
     end if
-    if(precisionMode .ne. 'S' .or. precisionMode .ne. 'D') then
+    if(.not.(precisionMode .eq. 'S' .or. precisionMode .eq. 'D')) then
         write(*,*) 'WARNING: bad precision mode:', precisionMode, ' passed to DIAGONALIZE; changing to "S"...'
         precisionMode = 'S'
     end if 
@@ -78,7 +80,7 @@ subroutine isSymmetric(array,systemSize,exitStatus) ! TODO:test, add in more err
 ! return: 0 on success, 1 if not symmetric, 2 if not the correct shape
     implicit none
     integer, intent(in) :: systemSize
-    real, dimension(systemSize,systemSize), intent(in) :: array      ! array to test for symmetry (hamlitonian must be symmetric)           
+    real(kind=dp), dimension(systemSize,systemSize), intent(in) :: array      ! array to test for symmetry (hamlitonian must be symmetric)           
     integer, intent(out) :: exitStatus             ! Nuff said
     integer :: i,j                                 ! loop variables 
     
