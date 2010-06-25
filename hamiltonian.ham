@@ -1,5 +1,4 @@
 my_secondhamiltonian.txt
-S    <-- insert precision mode here 'S' or 'D'
 V    <-- insert output mode here 'N' or 'V'
 6    <-- insert hamiltonian size here
 0 1 0 0 0 0

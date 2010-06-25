@@ -85,11 +85,10 @@ subroutine printOutput(vector,matrix,systemSize,outUnit) ! TODO: finish subrouti
 
     if(present(outUnit)) then ! print to that unit
         inquire(unit=outUnit, opened=isOpen)
-        if(isOpen) then
-            write(outUnit,'(A,/)') "Eigenvalues of this hamiltonian are:"
+        if(isOpen) then 
             call printVector(vector,systemSize,outUnit)
             if(present(matrix)) then
-                write(outUnit,'(/,A,/)') "Eigenvectors of this hamiltonian are:"
+                write(outUnit,*) ! blank line
                 call printMatrix(matrix,systemSize,outUnit)
             end if
         else

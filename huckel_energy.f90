@@ -22,13 +22,8 @@
 !                    on a new line
 !                    the  1s are the non-0 hamiltonian matrix elements between the Huckel basis functions, and
 !                    the 0s are 0 elements or the diagonal elements
-!
-!TODO: add support for hamiltonian calculation based on molecule structure? 
-!TODO: store double precision declaration in separate module
-!TODO: take out choice for single or double precision (use double)
-!TODO: add in passing the output mode, input filename and output filename as command line args
-!TODO: change the documentation ^^ to reflect changes to user interface
-!TODO: implement new whitspace regime
+
+
 program huckelEnergy 
 
 use doublePrecision
@@ -41,28 +36,15 @@ character(len=*), parameter :: inFile= 'hamiltonian.ham' !  file containing our 
 character(len=50) :: outFile       ! file to write to
 real(kind=dp), allocatable, dimension(:,:) :: hamiltonian ! we don't know how big a system we are dealing with yet
 real(kind=dp), allocatable, dimension(:) :: eigenvalues
-integer :: systemSize,exitStatus ! the size of system (i.e. hamiltonian dimensions), and the exitStatus of our subroutines, changed each time it is passed
-character(len=1) :: calcMode,precisionMode      ! "N" to compute just eigenvalues; "V" to compute eigenvectors aswel: "S" for single precision, "D" for double
-!DEBUG
-integer :: i,j
-!END DEBUG
-call getParams(inFile,systemSize,precisionMode,calcMode,outFile) ! read system data from our input file
+integer :: systemSize,exitStatus                   ! the size of system (i.e. hamiltonian dimensions), and the exitStatus of our subroutines, changed each time it is passed
+character(len=1) :: calcMode                       ! "N" to compute just eigenvalues; "V" to compute eigenvectors as well
 
-!DEBUG
- write(*,*) 'System size in main loop:', systemSize
- write(*,*) 'main loop precisionMode:' , precisionMode
- write(*,*) 'main loop calcMode:', calcMode
-!END DEBUG
+call getParams(inFile,systemSize,calcMode,outFile) ! read system data from our input file
+
 allocate(hamiltonian(systemSize,systemSize))   ! now all the hamiltonian attributes (shape) are set
 allocate(eigenvalues(systemSize))
 
 call parseArray(inFile,hamiltonian,systemSize)            ! read in the hamiltonian from file
-! DEBUG: call printMatrix(hamiltonian,systemSize)
-    !DEBUG 
-    do i=1,systemSize
-        write(*,'(3(F2.0,X))') (hamiltonian(i,j), j=1,systemSize)
-    end do   
-    !END DEBUG
 call isSymmetric(hamiltonian,systemSize,exitStatus)
 if(exitStatus .ne. 0) then ! no way to recover from asymmetric hamiltonian
     deallocate(hamiltonian)
@@ -72,21 +54,18 @@ end if
 
 write(*,*) 'diagonalizing the hamiltonian:' ! output to give user a visual
 call printmatrix(hamiltonian,systemSize)
-call diagonalize(hamiltonian,eigenvalues,systemSize,calcMode,precisionMode,exitStatus) 
+call diagonalize(hamiltonian,eigenvalues,systemSize,calcMode,exitStatus) 
 if(exitStatus .ne. 0) then ! if there were problems
     deallocate(hamiltonian)
     deallocate(eigenvalues)
     stop
 end if
 
-!call printMatrix(hamiltonian)
-call printVector(eigenvalues,systemSize)
-! Print our output to the specified file
-call printOutput(vector=eigenvalues,matrix=hamiltonian,systemSize=systemSize)
+call printOutput(eigenvalues,hamiltonian,systemSize)
 open(unit=10,file=outFile,action="WRITE",status="REPLACE")
-if(calcMode .eq. 'N') then
+if(calcMode .eq. 'N') then                 
     call printOutput(vector=eigenvalues,systemSize=systemSize,outUnit=10) ! if only eigenvalues calculated, only print eigenvalues..
-else 
+else                ! Why will this not interpret a type mismatch as the "optional" argument not being present?
     call printOutput(eigenvalues,hamiltonian,systemSize,10) ! else print the eigenvectors too
 end if
 close(10)

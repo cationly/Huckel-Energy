@@ -1,6 +1,8 @@
 TODO add support for hamiltonian calculation based on molecule structure? 
 DONE store double precision declaration in separate module
-TODO take out choice for single or double precision (use double)
+DONE take out choice for single or double precision (use double)
 TODO add in passing the output mode, input filename and output filename as command line args
-TODO change the documentation ^^ to reflect changes to user interface
+TODO change the documentation to reflect changes to user interface
+TODO alter diagonalize routine to get correct workspace size
+TODO add in function to check whether eigenvectors are all orthogonal (take transpose and if it is the inverse then matrix is orthogonal
 TODO implement new whitspace regime 

@@ -11,7 +11,7 @@ implicit none
 
 contains 
 
-subroutine diagonalize(toDiagonalize,eigenvalues,systemSize,calcMode,precisionMode,exitStatus) ! TODO: test, add in more error handling?
+subroutine diagonalize(toDiagonalize,eigenvalues,systemSize,calcMode,exitStatus) ! TODO: test, add in more error handling?
 ! keep the calls to LAPACK out of the way, maybe come up with a better interface later
     
     implicit none
@@ -22,7 +22,6 @@ subroutine diagonalize(toDiagonalize,eigenvalues,systemSize,calcMode,precisionMo
     integer :: lwork                                             
     integer, intent(inout) :: exitStatus                              ! contains exit status
     character(len=1), intent(inout) :: calcMode            ! which modes to use with the LAPACK routine
-    character(len=1), intent(inout) :: precisionMode       ! single or double precision
     character(len=1), parameter :: whichTriangle='U'       ! use the upper or lower triangle of the hamiltonian matrix
     
     exitStatus = 0
@@ -35,32 +34,19 @@ subroutine diagonalize(toDiagonalize,eigenvalues,systemSize,calcMode,precisionMo
    ! end if
     
     if(.not.(calcMode .eq. 'N' .or. calcMode .eq. 'V')) then
-        write(*,*) 'WARNING: bad calculation mode:', calcMode, ' passed to DIAGONALIZE; changing to "N"...'
+        write(*,*) 'WARNING: bad calculation mode: ', calcMode, ' passed to DIAGONALIZE; changing to "N"...'
         calcmode = 'N'
     end if
-    if(.not.(precisionMode .eq. 'S' .or. precisionMode .eq. 'D')) then
-        write(*,*) 'WARNING: bad precision mode:', precisionMode, ' passed to DIAGONALIZE; changing to "S"...'
-        precisionMode = 'S'
-    end if 
+    
     ! actually call the LAPACK routine (after all that hassle)
     allocate(work(lwork))
-    
-    !DEBUG
-     write(*,*) 'system size in subr: ',systemSize
-     write(*,*) 
-    !END DEBUG    
-    if(precisionMode .eq. 'S') then
-        call SSYEV(calcMode,whichTriangle,systemSize,toDiagonalize,systemSize,eigenvalues,work,lwork,exitStatus)
-    else 
-        call DSYEV(calcMode,whichTriangle,systemSize,toDiagonalize,systemSize,eigenvalues,work,lwork,exitStatus)
-    end if
-
+    call DSYEV(calcMode,whichTriangle,systemSize,toDiagonalize,systemSize,eigenvalues,work,lwork,exitStatus)
     deallocate(work)
     
     ! react to failed subroutine calls
     select case(exitStatus) !should really move this to main loop or separate subroutine called in the main loop, it's a TODO
     case(-9:-1)
-        write(*,*) 'FATAL: bad argument number:', exitStatus, ' passed to LAPACK subroutine...' ! drama queen...
+        write(*,*) 'FATAL: bad argument number: ', exitStatus, ' passed to LAPACK subroutine...' ! drama queen...
         return
     case(0) ! all clear
         return
