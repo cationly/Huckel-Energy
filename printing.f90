@@ -95,10 +95,10 @@ subroutine printOutput(vector,matrix,systemSize,outUnit) ! TODO: finish subrouti
             return
         end if
     else !print to stdout
-         write(outUnit,'(A,/)') "Eigenvalues of this hamiltonian are:"
+         write(*,'(A,/)') "Eigenvalues of this hamiltonian are:"
          call printVector(vector,systemSize)
          if(present(matrix)) then
-             write(outUnit,'(/,A,/)') "Eigenvectors of this hamiltonian are:"
+             write(*,'(/,A,/)') "Eigenvectors of this hamiltonian are:"
              call printMatrix(matrix,systemSize)
          end if
     end if

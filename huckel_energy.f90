@@ -28,9 +28,9 @@
 !TODO: add in choice to choose single or double precision
 program huckelEnergy 
 
-use module parse   
-use module printing
-use module matrixOp
+use parse   
+use printing
+use matrixOp
 
 implicit none
 character(len=*), parameter :: inFile = 'hamiltonian.ham' !  file containing our hamiltonian
@@ -39,7 +39,6 @@ real, allocatable, dimension(:,:) :: hamiltonian ! we don't know how big a syste
 real, allocatable, dimension(:) :: eigenvalues
 integer :: systemSize,exitStatus ! the size of system (i.e. hamiltonian dimensions), and the exitStatus of our subroutines, changed each time it is passed
 character(len=1) :: calcMode,precisionMode      ! "N" to compute just eigenvalues; "V" to compute eigenvectors aswel: "S" for single precision, "D" for double
-logical :: Symettric                            ! take a guess...
 !DEBUG
 integer :: i,j
 !END DEBUG
@@ -79,10 +78,10 @@ end if
 !call printMatrix(hamiltonian)
 call printVector(eigenvalues,systemSize)
 ! Print our output to the specified file
-call printOutput(eigenvalues,hamiltonian,systemSize)
+call printOutput(vector=eigenvalues,matrix=hamiltonian,systemSize=systemSize)
 open(unit=10,file=outFile,action="WRITE",status="REPLACE")
 if(calcMode .eq. 'N') then
-    call printOutput(eigenvalues,systemSize,10) ! if only eigenvalues calculated, only print eigenvalues..
+    call printOutput(vector=eigenvalues,systemSize=systemSize,outUnit=10) ! if only eigenvalues calculated, only print eigenvalues..
 else 
     call printOutput(eigenvalues,hamiltonian,systemSize,10) ! else print the eigenvectors too
 end if
