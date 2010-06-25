@@ -18,16 +18,20 @@ subroutine diagonalize(toDiagonalize,eigenvalues,systemSize,calcMode,exitStatus)
     integer, intent(in) :: systemSize
     real(kind=dp), dimension(systemSize,systemSize), intent(inout) :: toDiagonalize   ! array that needs to be altered by lapack routine (hamiltonian)
     real(kind=dp), dimension(systemSize), intent(inout) :: eigenvalues       ! array holding the eigenvalues
-    real(kind=dp), allocatable, dimension(:) :: work                            ! necessary arguments to do with efficiency I think...
-    integer :: lwork                                             
+    real(kind=dp), allocatable, dimension(:) :: work                            ! workspace to carry out diagonalisation
+    integer :: lwork                                                            ! Size of workspace
     integer, intent(inout) :: exitStatus                              ! contains exit status
     character(len=1), intent(inout) :: calcMode            ! which modes to use with the LAPACK routine
     character(len=1), parameter :: whichTriangle='U'       ! use the upper or lower triangle of the hamiltonian matrix
     
-    exitStatus = 0
+    
+    !DELETE
     lwork = 3*systemSize - 1
-  
-   ! TODO: find how to check array lengths and resize from within subroutine 
+    !END DELETE
+
+   ! gfortran 4.1.2 will not allow us to pass assumed size ALLOCATABLE arrays and re/de/allocate them 
+   ! makes my error checking job a whole lot harder
+   !  
    ! if(allocated(eigenvalues)) then 
    !     deallocate(eigenvalues)
    !     allocate(eigenvalues(sysmtemSize)
@@ -38,8 +42,15 @@ subroutine diagonalize(toDiagonalize,eigenvalues,systemSize,calcMode,exitStatus)
         calcmode = 'N'
     end if
     
+    ! set the workspace to optimal size to perform the diagonalisation
+    lwork=-1 !if lwork is set to -1 DSEYV sets work(1) as the optimal lwork
+    allocate(work(1))
+    call DSYEV(calcMode,whichTriangle,systemSize,toDiagonalize,systemSize,eigenvalues,work,lwork,exitStatus)
+    lwork = work(1)
+    deallocate(work)
+    allocate(work(lwork)) ! allocate the optimal workspace
+
     ! actually call the LAPACK routine (after all that hassle)
-    allocate(work(lwork))
     call DSYEV(calcMode,whichTriangle,systemSize,toDiagonalize,systemSize,eigenvalues,work,lwork,exitStatus)
     deallocate(work)
     
@@ -54,6 +65,9 @@ subroutine diagonalize(toDiagonalize,eigenvalues,systemSize,calcMode,exitStatus)
         write(*,*) 'FATAL: LAPACK subroutine failed to converge...'
         return
     end select
+
+    exitStatus = 0
+    return 
 
 end subroutine diagonalize
 

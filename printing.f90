@@ -73,11 +73,12 @@ subroutine printVector(vector,vecSize,outUnit)
 end subroutine printVector
 
 
-subroutine printOutput(vector,matrix,systemSize,outUnit) ! TODO: finish subroutine
+subroutine printOutput(vector,matrix,systemSize,calcMode,outUnit) ! TODO: finish subroutine
     implicit none
     integer, intent(in) :: systemSize
     real(kind=dp), dimension(systemSize,systemSize),optional, intent(in) :: matrix ! matrix of eigenvalues
     real(kind=dp), dimension(systemSize), intent(in) :: vector
+    character(len=1),intent(in) :: calcMode
     integer,optional, intent(in) :: outUnit ! stream to print to 
     logical :: isOpen
 
@@ -98,7 +99,7 @@ subroutine printOutput(vector,matrix,systemSize,outUnit) ! TODO: finish subrouti
     else !print to stdout
          write(*,'(A,/)') "Eigenvalues of this hamiltonian are:"
          call printVector(vector,systemSize)
-         if(present(matrix)) then
+         if(present(matrix) .and. calcMode .eq. "V") then
              write(*,'(/,A,/)') "Eigenvectors of this hamiltonian are:"
              call printMatrix(matrix,systemSize)
          end if

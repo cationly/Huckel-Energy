@@ -1,6 +1,0 @@
- In file huckel_energy.f95:318
-
-end function isSymmetric 
-  1
-Error: Expecting END SUBROUTINE statement at (1)
-Error: Unexpected end of file in 'huckel_energy.f95'

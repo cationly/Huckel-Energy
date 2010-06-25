@@ -1,4 +1,4 @@
-GFORTRAN module created from doublePrecision.f90 on Fri Jun 25 16:10:11 2010
+GFORTRAN module created from doublePrecision.f90 on Fri Jun 25 18:12:47 2010
 If you edit this, you'll get what you deserve.
 
 (() () () () () () () () () () () () () () () () () () () () ())

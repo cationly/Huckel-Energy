@@ -79,12 +79,12 @@ if(exitStatus .ne. 0) then ! if there were problems
     stop
 end if
 
-call printOutput(eigenvalues,hamiltonian,systemSize)
+call printOutput(eigenvalues,hamiltonian,systemSize,calcMode) ! print to stdout
 open(unit=10,file=outFile,action="WRITE",status="REPLACE")
 if(calcMode .eq. 'N') then                 
-    call printOutput(vector=eigenvalues,systemSize=systemSize,outUnit=10) ! if only eigenvalues calculated, only print eigenvalues..
+    call printOutput(vector=eigenvalues,systemSize=systemSize,calcMode=calcMode,outUnit=10) ! if only eigenvalues calculated, only print eigenvalues..
 else                ! Why will this not interpret a type mismatch as the "optional" argument not being present?
-    call printOutput(eigenvalues,hamiltonian,systemSize,10) ! else print the eigenvectors too
+    call printOutput(eigenvalues,hamiltonian,systemSize,calcMode,10) ! else print the eigenvectors too
 end if
 close(10)
 
