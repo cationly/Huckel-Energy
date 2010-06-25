@@ -78,11 +78,6 @@ subroutine isSymmetric(array,systemSize,exitStatus) ! TODO:test, add in more err
     !    return
     !end if  
    
-    !DEBUG 
-    do i=1,systemSize
-        write(*,'(3(F2.0,X))') (array(i,j), j=1,systemSize)
-    end do   
-    !END DEBUG
     ! go through rows and columns check if array(i)(j)== array(j)(i), if not then set isSymmetric to 1
     rows: do i=1,systemSize
         columns: do j=i,systemSize     ! only need to check upper triangle 

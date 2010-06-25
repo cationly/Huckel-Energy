@@ -5,24 +5,30 @@
 ! can be given in units of the off-diagonal hamiltonian elements and the
 ! 0-energy taken to be the average energy ( the diagonal hamiltonian elements)
 !
-! The hamiltonian is stored in a file called "hamiltonian.ham" in the same directory 
-! as the executable
-!
-! INPUT FILE FORMAT: 1st line is the name of the output file which will store the eigenvalues
-!                    2nd line is the precision "S" or "D" and whether we want only eigenvalues ("N") or eigenvectors output aswel ("V") 
-!                    3rd line is the size of the hamiltonian 
-!                    subsequent lines are a space separated list of matrix elements
+! COMPILING HUCKEL_ENERGY: compile all source files (huckel_energy.f90, doublePrecision.f90
+!                          parse.f90, printing.f90, matrixOp.f90) separately and then link
+!                          the object files together and with the LAPACK and LBLAS libraries
 !
 !
-! IGNORE THIS FORMATTING, MAYBE IMPLEMENT LATER, BUT NOW THERE IS NO NEED
-! INPUT FILE FORMAT: lines beginning with "#" are comments. the line starting with a "@" must contain
-!                    only a single integer which gives us the dimension of the hamiltonian contained in the
-!                    remainder of the file. the line starting with "!" is the name of the file which the eigenvalues will be written to
-!                    The remainder of the file is a space separated matrix of 1s and 0s, however the matrix must start and end with a "* 
-!                    on a new line
-!                    the  1s are the non-0 hamiltonian matrix elements between the Huckel basis functions, and
-!                    the 0s are 0 elements or the diagonal elements
-
+! CALLING HUCKEL_ENERGY: /path/to/huckel:~$ ./huckel_energy $INFILE $OUTFILE $CALCMODE
+!                        
+!                         INFILE: the file to read the hamiltonian from. It MUST be formatted
+!                                 so that the 1st line contains only the size of the hamiltonian
+!                                 and subsequent lines contain a matrix of space-separated numbers
+!                                 representing the hamiltonian in the Huckel Basis, with beta set
+!                                 to 1 and alpha set to 0 (and all other elements 0)
+!
+!                        OUTFILE: the name of the file to have the results written to. Output is
+!                                 in the formatted such that the first line contains a space separated
+!                                 list of the hamiltonian's eigenvalues and (optionally) subsequent lines
+!                                 contain an orthogonal matrix whose columns correspond to the eigenvectors
+!                                 of the hamiltonian. 
+!
+!                       CALCMODE: A single character, either an "N" or a "V". "N" means that the output will
+!                                 only contain the eigenvalues, "V" means that output will also contain the 
+!                                 matrix of eigenvectors 
+!    
+!
 
 program huckelEnergy 
 
@@ -32,14 +38,26 @@ use printing
 use matrixOp
 
 implicit none
-character(len=*), parameter :: inFile= 'hamiltonian.ham' !  file containing our hamiltonian
-character(len=50) :: outFile       ! file to write to
+character(len=50) :: inFile,outFile          !  file containing our hamiltonian and the file to write to
 real(kind=dp), allocatable, dimension(:,:) :: hamiltonian ! we don't know how big a system we are dealing with yet
-real(kind=dp), allocatable, dimension(:) :: eigenvalues
+real(kind=dp), allocatable, dimension(:) :: eigenvalues   ! thus we don't know how many eigenvalues we need to store
 integer :: systemSize,exitStatus                   ! the size of system (i.e. hamiltonian dimensions), and the exitStatus of our subroutines, changed each time it is passed
 character(len=1) :: calcMode                       ! "N" to compute just eigenvalues; "V" to compute eigenvectors as well
 
-call getParams(inFile,systemSize,calcMode,outFile) ! read system data from our input file
+call getParams(inFile,systemSize,calcMode,outFile,exitStatus) ! read system data from our input file
+select case(exitStatus)
+    case(1) ! bad num. of command line options: huckel_energy takes 3
+        write(*,*) "FATAL: bad number of command line arguments: ", iargc()
+        write(*,*) "command line: huckel_energy $INFILE $OUTFILE $CALCMODE"
+        stop
+    case(2) ! bad character specifying 
+        write(*,*) "WARNING: invalid CalcMode argument: ", calcMode, " passed: choosing 'N'..."
+        calcMode ="N"
+    case(0)
+    ! returned success    
+    case default
+        write(*,*) "WARNING: Unknown exitStatus returned from getParams"
+end select
 
 allocate(hamiltonian(systemSize,systemSize))   ! now all the hamiltonian attributes (shape) are set
 allocate(eigenvalues(systemSize))
