@@ -1,9 +1,10 @@
-TODO add support for hamiltonian calculation based on molecule structure? 
 DONE store double precision declaration in separate module
 DONE take out choice for single or double precision (use double)
 DONE add in passing the output mode, input filename and output filename as command line args
 DONE change the documentation to reflect changes to user interface
 DONE alter diagonalize routine to get correct workspace size
-INPROGRESS add in function to check whether eigenvectors are all orthogonal (take transpose and if it is the inverse then matrix is orthogonal
-TODO move all error handling to main loop
-TODO implement new whitspace regime 
+DONE add in procedure to check whether eigenvectors are all orthogonal (take transpose and if it is the inverse then matrix is orthogonal
+DONE move all error handling to main loop
+TODO unify subroutines to call files by name or unit number - not a mélange of the two
+DONE move documentation to README
+DONE implement new whitspace regime 
