@@ -1,7 +1,6 @@
 !
 ! Module for the MATRIX OPERATIONS sunroutines to be used with huckel_energy
 !
-!
 
 module matrixOp
 
@@ -23,11 +22,6 @@ subroutine diagonalize(toDiagonalize,eigenvalues,systemSize,calcMode,exitStatus)
     integer, intent(inout) :: exitStatus                              ! contains exit status
     character(len=1), intent(inout) :: calcMode            ! which modes to use with the LAPACK routine
     character(len=1), parameter :: whichTriangle='U'       ! use the upper or lower triangle of the hamiltonian matrix
-    
-    
-    !DELETE
-    lwork = 3*systemSize - 1
-    !END DELETE
 
    ! gfortran 4.1.2 will not allow us to pass assumed size ALLOCATABLE arrays and re/de/allocate them 
    ! makes my error checking job a whole lot harder
@@ -80,7 +74,7 @@ subroutine isSymmetric(array,systemSize,exitStatus) ! TODO:test, add in more err
 ! return: 0 on success, 1 if not symmetric, 2 if not the correct shape
     implicit none
     integer, intent(in) :: systemSize
-    real(kind=dp), dimension(systemSize,systemSize), intent(in) :: array      ! array to test for symmetry (hamlitonian must be symmetric)           
+    real(kind=dp), dimension(systemSize,systemSize), intent(in) :: array   ! array to test for symmetry (hamlitonian must be symmetric)           
     integer, intent(out) :: exitStatus             ! Nuff said
     integer :: i,j                                 ! loop variables 
     
@@ -106,6 +100,43 @@ subroutine isSymmetric(array,systemSize,exitStatus) ! TODO:test, add in more err
     exitStatus = 0  ! all clear- hamiltonian is symmetric
     return
 end subroutine isSymmetric 
+
+
+subroutine checkOrthogonal(matrix,systemSize,exitStatus)
+! returns 0 if matrix is orthogonal, 1 if not
+    
+    implicit none
+    real(kind=dp), dimension(systemSize,systemSize), intent(in) :: matrix
+    real(kind=dp), dimension(systemSize,systemSize) :: prod ! matrix*matrix^T
+    integer, intent(in) ::systemSize
+    integer, intent(out) :: exitStatus
+    integer :: i,j
+    
+    ! This is reeeeeally inefficient: should really use the matrix as a scratchspace or in 
+    ! some other fashion optimize this code, but this isn't really an important program so...
+    prod = matmul(transpose(matrix),matrix)
+
+    ! Check that the product mat*mat^T is the identity. As we are dealing with floating point
+    ! arithmetic, we define a "zeroPoint", defined in the doublePrecision module, which we 
+    ! take as small enough so that any numbers less than this can be considered 0
+    do i=1,systemSize
+        do j=1,systemSize
+            if(i .ne. j ) then
+                if(.not.(abs(prod(i,j)) .lt. zeroPoint)) then  ! if off diagonals are not close to 0 
+                    exitStatus = 1
+                    return
+                end if
+            else if(.not.(abs(prod(i,j)-1) .lt. zeroPoint)) then    ! if diagonals are not close to 1
+                exitStatus = 1
+                return
+            end if
+        end do
+    end do
+
+    exitStatus = 0
+    return
+
+end subroutine checkOrthogonal
 
 
 end module matrixOp

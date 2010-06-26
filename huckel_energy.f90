@@ -19,12 +19,12 @@
 !                                 to 1 and alpha set to 0 (and all other elements 0)
 !
 !                        OUTFILE: the name of the file to have the results written to. Output is
-!                                 in the formatted such that the first line contains a space separated
+!                                 formatted such that the first line contains a space separated
 !                                 list of the hamiltonian's eigenvalues and (optionally) subsequent lines
 !                                 contain an orthogonal matrix whose columns correspond to the eigenvectors
 !                                 of the hamiltonian. 
 !
-!                       CALCMODE: A single character, either an "N" or a "V". "N" means that the output will
+!                       CALCMODE: A single character, either "N" or "V". "N" means that the output will
 !                                 only contain the eigenvalues, "V" means that output will also contain the 
 !                                 matrix of eigenvectors 
 !    
@@ -50,13 +50,14 @@ select case(exitStatus)
         write(*,*) "FATAL: bad number of command line arguments: ", iargc()
         write(*,*) "command line: huckel_energy $INFILE $OUTFILE $CALCMODE"
         stop
-    case(2) ! bad character specifying 
+    case(2) ! bad character specification 
         write(*,*) "WARNING: invalid CalcMode argument: ", calcMode, " passed: choosing 'N'..."
         calcMode ="N"
     case(0)
     ! returned success    
     case default
-        write(*,*) "WARNING: Unknown exitStatus returned from getParams"
+        write(*,*) "FATAL: Unknown exitStatus returned from getParams"
+        stop
 end select
 
 allocate(hamiltonian(systemSize,systemSize))   ! now all the hamiltonian attributes (shape) are set
@@ -65,6 +66,7 @@ allocate(eigenvalues(systemSize))
 call parseArray(inFile,hamiltonian,systemSize)            ! read in the hamiltonian from file
 call isSymmetric(hamiltonian,systemSize,exitStatus)
 if(exitStatus .ne. 0) then ! no way to recover from asymmetric hamiltonian
+    write(*,*) "FATAL: hamiltonian parsed from ", trim(adjustl(inFile)), " is not symmetric"
     deallocate(hamiltonian)
     deallocate(eigenvalues)
     stop
@@ -77,6 +79,11 @@ if(exitStatus .ne. 0) then ! if there were problems
     deallocate(hamiltonian)
     deallocate(eigenvalues)
     stop
+end if
+if(calcMode .eq. 'V') then ! if the hamiltonian was replaced my eigenvector matrix
+    call checkOrthogonal(hamiltonian,systemSize,exitStatus)
+    write(*,*) "ORTHGONALITY: ", exitStatus
+    if(exitStatus .ne. 0) write(*,*) "ERROR: calculated eigenvectors are not orthogonal! Cannot represent energy eigenstates" 
 end if
 
 call printOutput(eigenvalues,hamiltonian,systemSize,calcMode) ! print to stdout

@@ -18,7 +18,7 @@ subroutine printMatrix(matrix,matSize,outUnit) ! TODO: test, add in error handli
     real(kind=dp),dimension(matSize,matSize), intent(in) :: matrix
     integer, intent(in),optional :: outUnit       ! the stream to print to 
     logical,save :: isOpen = .false.              ! set to true if stream is open, false if not 
-    character(len=20) :: frmBase = '((F6.3,X))'   ! the form of 1 "entry" of output
+    character(len=20) :: frmBase = '((F6.3,2X))'   ! the form of 1 "entry" of output
     character(len=20) :: frm                      ! output format string
     character(len=20) :: rowLength                ! how long is the output?
     integer :: i,j                                ! loop variables 
@@ -50,7 +50,7 @@ subroutine printVector(vector,vecSize,outUnit)
     real(kind=dp),dimension(vecsize), intent(in) :: vector
     integer, intent(in),optional :: outUnit   ! the stream to print to 
     logical,save :: isOpen = .false.              ! set to true if stream is open, false if not 
-    character(len=20) :: frmBase = '((F7.4,X))'   ! the form of 1 "entry" of output
+    character(len=20) :: frmBase = '((F7.4,2X))'   ! the form of 1 "entry" of output
     character(len=20) :: frm                    ! output format string
     character(len=20) :: rowLength              ! how long is the output?
     integer :: i
