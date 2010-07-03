@@ -70,9 +70,11 @@
 #TODO delete hamtemp
 
 
+#FUNCTION parseargs(dbgFlag,batchFlag,batchParms)
+''' This function parses the command line arguments passed to huckelPlot.
+    We set 1 boolean flag (dbgFlag) and 1 integer flag (batchFlag). 
+    If dbgFlag is set to TRUE then all debugging info gets printed to stdout
+    If batchFlag != 0 then the number stored is the number of optional args
+    passed to huckelPlot - this uniquely defines which information was passed.
 
-
-
-
-
-
+'''
