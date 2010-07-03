@@ -8,3 +8,6 @@ DONE move all error handling to main loop
 TODO unify subroutines to call files by name or unit number - not a mélange of the two
 DONE move documentation to README
 DONE implement new whitspace regime 
+TODO make a script to allow the varying of hamiltonian parameters and output in
+     easily graphable format
+TODO update documentation to reflect changes and new functionality 
