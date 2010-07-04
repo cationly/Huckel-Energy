@@ -25,8 +25,8 @@
            
            TODO: add in usage details when it is refined
 
-    OUTPUT: huckelPlot prints its output to a .csv file (user specified @ runtime)
-            in a space-separated column format:
+    OUTPUT: huckelPlot prints its output to a .csv file
+            (user specified @ runtime) in a space-separated column format:
 
             X  [Y]  E1  E2 ... EN
             |   |   \           /
@@ -40,13 +40,19 @@
             GNUPlot or Open Office Calc (see appropriate documentation for info)
 '''
 
-#TODO Import the argument-passing module
-#TODO Import the OS-type modules for executing shell commands
+# Import the OS-type modules for executing shell commands
+import os
+import sys
+from os import system
+from os import path
+from sys import exit
 
-#TODO CALL parse command line args ( -debug, -batch .ham file outFile [start/stop/step val])
-#TODO CALL parse: Hamiltonian, (var starting/stop/step value) x 2, output filename 
-#TODO Put the hamiltonian in an ARRAY with entries = constants or up to 2 different variables
+#TODO CALL parse command line args 
+    # ( -debug, -infile .ham file -outfile outFile -step [start/stop/step val])
+debugFlag,outFile,hamiltonian,tokens,start,stop,step = parseArgs()
 
+#TODO match the hamiltonian elements corresponding to TOKENS to variables
+#     would really like pointers to point to PARAMETERS...
 #TODO create the OUTFILE
 #TODO create tmp.out
 #TODO create hamtemp
@@ -70,11 +76,50 @@
 #TODO delete hamtemp
 
 
-#FUNCTION parseargs(dbgFlag,batchFlag,batchParms)
-''' This function parses the command line arguments passed to huckelPlot.
-    We set 1 boolean flag (dbgFlag) and 1 integer flag (batchFlag). 
-    If dbgFlag is set to TRUE then all debugging info gets printed to stdout
-    If batchFlag != 0 then the number stored is the number of optional args
-    passed to huckelPlot - this uniquely defines which information was passed.
+#FUNCTION parseargs()
+def parseArgs()
+    ''' 
+        This function parses the command line arguments passed to huckelPlot.
+        We set 1 boolean flag (dbgFlag). If dbgFlag is set to TRUE then all
+        debugging info gets printed to stdout.
 
-'''
+        RETURNS: tuple containing: 
+             
+             (debugFlag,outFile,hamiltonian[][],tokens[],start[],stop[],step[]) 
+    '''
+    #TODO import getopts module
+
+    #TODO parse commandline and set the debugFlag
+    #TODO request output filename (append .csv)
+    #TODO request the token definitions (i.e. what letters/strings will be used)
+    #TODO input hamiltonian (make sure to echo in a nice format & if any 
+    #TODO check that hamiltonian is: symmetric, only contains numbers or tokens
+    #TODO request start/stop/step values (be smart about what tokens defined)
+    
+    #DEBUG
+    debugFlag = True
+    outfile = 'out.out'
+    tokens = ['x']
+    hamiltonian = parseHamiltonian(tokens)
+    start = [0]
+    stop = [10]
+    step = [0.1]
+
+    return debugFlag,outFile,hamiltonian,tokens,start,stop,step
+    #END DEBUG
+
+def parseHamiltonian(tokens)
+    '''
+        This function takes user input and returns a list of lists representing
+        the Hamiltonian matrix
+    '''
+
+    #TODO request hamiltonian input
+    #TODO read hamiltonian
+    #TODO check parsed hamiltonian against tokens
+    #TODO check hamiltonian symmetric
+
+    #DEBUG
+    hamiltonian = [[0,1,tokens[0]],[1,0,1],[tokens[0],1,0]]
+    return hamiltonian
+    #END DEBUG
