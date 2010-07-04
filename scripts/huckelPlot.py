@@ -51,8 +51,17 @@ from sys import exit
     # ( -debug, -infile .ham file -outfile outFile -step [start/stop/step val])
 debugFlag,outFile,hamiltonian,tokens,start,stop,step = parseArgs()
 
+if(debugFlag)
+    print 'outFile: ',outFile
+    print 'hamiltonian: ', hamiltonian
+    print 'tokens: ', tokens
+    print 'start: ', start
+    print 'stop: ', stop
+    print 'step: ', step
+
 #TODO match the hamiltonian elements corresponding to TOKENS to variables
 #     would really like pointers to point to PARAMETERS...
+
 #TODO create the OUTFILE
 #TODO create tmp.out
 #TODO create hamtemp
