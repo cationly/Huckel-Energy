@@ -10,6 +10,7 @@ DONE move documentation to README
 DONE implement new whitspace regime 
 TODO make a script to allow the varying of hamiltonian parameters and output in
      easily graphable format
+    TODO create a hamiltonian CLASS 
     TODO write parseArgs function
     TODO write parseHamiltonian function
     TODO find out to make a variable always a reference to another in Python
