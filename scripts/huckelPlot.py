@@ -39,29 +39,104 @@
             This file format is common and easily plottable by, for example, 
             GNUPlot or Open Office Calc (see appropriate documentation for info)
 '''
+def main():
+    from hamiltonian import hamiltonian
+    from Numeric import arange
+    import os
+    import sys
 
-from hamiltonian.py import hamiltonian
-import os
-import sys
+    # parse command line options, set debug flag, set outFile name
+    debugFlag,outFileName = parseArgs()
 
-# parse command line options, set debug flag, set outFile name
+    # parse hamiltonian,system data etc (inbuilt ham methods)
+    ham = hamiltonian()
+    ham.parse()
 
-# parse hamiltonian,system data etc (inbuilt ham methods)
-# for tokens, prompt use to enter start,stop and step values, put in a map
+    # open the outfile
+    outFile = open(outFileName+'.out','w') # change the fileName to a file object
 
-# open the outfile
+    # SHOULD BE ABLE TO DO THIS BY RECURSION...
+    # only loop over 1st token till I can sort out the recursion
+    # loop over token 1
+    #      .....
+    #      set the hamiltonian tokens to their values
+    #      print the hamiltonian to ham.tmp
+    #      call huckel_energy ham.tmp tmp.out N
+    #      read in tmp.out 
+    #      append the token values followed by the eigenvalues to the outfile
+    #
+    if len(ham.getTokens()) != 0:
+        token = ham.getTokens()[0]
+        start = float(ham.getTokenRange(token)[0])
+        stop = float(ham.getTokenRange(token)[1])
+        step = float(ham.getTokenRange(token)[2])
+        for tokenVal in arange(start,stop,step):
+            ham.assign(token,tokenVal)
+            ham.filePrint("ham.tmp")
+            os.system("../src/huckel_energy ham.tmp out.tmp N") # call Fortran code
+            outTmp = open('out.tmp','r')
+            outFile.write(str(tokenVal)+' '+outTmp.readline()) # write the eigenvalues to the outFile
+            outTmp.close()
+        os.system('rm ham.tmp out.tmp')
+    else:
+        print 'FAIL: no tokens specified'
 
-# SHOULD BE ABLE TO DO THIS BY RECURSION...
-# loop over token 1
-#     loop over token 2
-#         .....
-#             set the hamiltonian tokens to their values
-#             print the hamiltonian to ham.tmp
-#             call huckel_energy ham.tmp tmp.out N
-#             read in tmp.out 
-#             append the token values followed by the eigenvalues to the outfile
-#
+    # close the outfile
+    outFile.close()
 
-# close the outfile
+    # write a gnuplot script
 
-#---END---
+    plot(outFileName)
+
+    #---END---
+
+def parseArgs():
+    '''
+        Parse the command line arguments:
+
+        USAGE: "-d" or "--debug" argument sets the debugFlag
+               "-o" or "--outfile" sets the filename to print to 
+               
+        RETURNS: tuple of form:  (debugFlag,outfileName)
+                                      |         |
+                                      boolean   string
+    '''
+
+    from getopt import getopt
+    from sys import argv
+
+    shortOpt = 'do:'
+    longOpt = ['debug','outfile=']
+    
+    debugFlag = False
+    outfileName = 'result.out'
+    options, rest = getopt(argv[1:],shortOpt,longOpt)
+
+    if rest != []:  # unknown args passed
+        print 'Unknown arguments: ', rest, ' passed: ignoring...'
+
+    for option,value in options:
+        if option in ('-d','--debug'):
+            debugFlag = True
+        if option in ('-o','--outfile'):
+            outfileName = value
+    
+    if debugFlag:
+        print outFileName
+    return debugFlag,outfileName
+
+def plot(outputFileName):
+
+    outputFile = open(outputFileName+'.out','r')
+    script = open(outputFileName+'.p','w')
+    
+    script.write('plot "'+outputFileName+'.out" using 1:2 , ')
+
+    for columns in range(3,len(outputFile.readline().split())):
+        script.write('"'+outputFileName+'.out" using 1:'+str(columns)+', ')
+    
+    script.write('"'+outputFileName+'.out" using 1:'+str(len(outputFile.readline().split())))
+
+    
+if __name__ == '__main__':
+    main()

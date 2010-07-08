@@ -79,8 +79,8 @@ module parse
         end if
         read(10,*,iostat=exitStatus)          ! advance past the array size parameter
 
-        rows: do i=1,systemSize
-            read(unit=10,fmt=frm) (array(i,j), j=1,systemSize)  ! LAPACK only needs 1 triangle, but we do whole array to be safe
+        rows: do i=1,systemSize  !changed the fmt statement as was inflexible
+            read(unit=10,fmt=*) (array(i,j), j=1,systemSize)  ! LAPACK only needs 1 triangle, but we do whole array to be safe
         end do rows                                             ! the extra computing power will be trivial for my hamiltonians
         if(exitStatus .ne. 0) then
             exitStatus =4

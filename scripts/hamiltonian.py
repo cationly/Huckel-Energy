@@ -1,11 +1,13 @@
 ''' 
-    This is a class to implement a Hamiltonian with up 
-    variable parameters 
+    This is a class to implement a Hamiltonian  
+    variable parameters (now, up to 2)
 '''
 
 class hamiltonian:
 
-    def __init__(self)
+
+
+    def __init__(self):
         '''
             We simulate the hamiltonian as an array. The action of a "2D array"
             is replicated by a 1D array and knowledge of the hamiltonian size.
@@ -14,13 +16,14 @@ class hamiltonian:
             efficient....
         '''
 
-        elements = [] # The actual elements of the hamiltonian
-        size = 0        # The dimension of the hamiltonian
-        tokens = []       # list of the tokens to be used
-        tokenLocs = {}    # a map of token "names" to their locations within H
-        tokenRange = {}   # map of token names to a list of form [start,stop,step]
+        self.elements = [] # The actual elements of the hamiltonian
+        self.size = 0        # The dimension of the hamiltonian
+        self.tokens = []       # list of the tokens to be used
+        self.tokenLocs = {}    # a map of token "names" to their locations within H
+        self.tokenRange = {}   # map of token names to a list of form [start,stop,step]
 
-    def parse(self)
+
+    def parse(self):
         '''
             Parse in the hamiltonian from the command line
         '''    
@@ -32,94 +35,114 @@ class hamiltonian:
         self.tokenLocs = {}
         self.tokenRange = {}
 
-        raw_input('Token declarations: ') tokenString
-        if(len(tokenString.split()) > 2) # any more than 2 becomes unplottable
-            while(len(tokenString.split()) > 2)
-                raw_input('too many token declarations (max. 2)') tokenString
+        tokenString = raw_input('Token declarations: ')
+                
+        #if len(tokenString.split()) == 0: 
+        #    while len(tokenString.split()) > 2 or len(tokenString.split()) == 0:
+        #        print('invalid number of token declarations (1 or 2)')                
+        #        tokenString = raw_input('\nToken declarations: ')
 
-        for token in tokenString.split()
+        for token in tokenString.split():
             self.tokens.append(token) # add it to our list of tokens
             self.tokenLocs[token] = [] # initialise our location dictionary
             self.tokenRange[token] = [] # initialise range dicionary 
 
         # prompt user for hamSize, set size
-        raw_input('\n\nHamiltonian size: ') hamSize
-        while(True)
+        while True:
             try:
+                hamSize = raw_input('\n Hamiltonian size: ')
                 self.size = int(hamSize)
+                if self.size == 0:
+                    print '\ninvalid size passed'
+                    continue
+            except ValueError:
+                hameSize = raw_input('\n invalid size passed, choose again: ')
+                continue
+            else:
                 break
-            except ValueError
-                raw_input('\n invalid size passed, choose again:') hamSize
-        
+
+
         # prompt for hamiltonian
-        print '\n\nInput hamiltonian matrix: '
+        print '\n\nInput hamiltonian matrix:\n '
         
         # iterate SIZE times
-        for row in range(self.size)
-            while(True)         # must make sure we have a valid line
+        for row in range(self.size):
+            while True:         # must make sure we have a valid line
                 errVal = False  # is there an INvalid entry in the line? 
 
-                raw_input() hamLine 
-                if(len(hamline.split() == size))
-                    for entry in hamline.split()
+                hamLine = raw_input() 
+                if len(hamLine.split()) == self.size:
+                    for entry in hamLine.split():
                         try:
                             float(entry)
-                        except ValueError   # the value is *not* a number
-                            if(entry not in self.tokenList) # and *not* a token
+                        except ValueError:   # the value is *not* a number
+                            if(entry not in self.tokens): # and *not* a token
                                 print "\nundefined token passed,\
                                         re-enter line: "
                                 errVal = True # entry is invalid...
-                                break # one invalid input ruins the line
+                                break # one invalid input ruins the line 
                     
-                    
-                    if(errVal)    # entry is invalid so we cycle and ask for
+                    if(errVal):    # entry is invalid so we cycle and ask for
                         continue  # input again
-                    else
-                        for entry in hamline.split()
+                    else:
+                        for entry in hamLine.split():
                             try:
-                                self.hamiltonian.append(float(entry))
-                            except ValueError # if it is a token
-                                self.hamiltonian.append(0) # could have put anything
-                                self.tokenLocs[entry].append(len(hamiltonian)-1)
+                                self.elements.append(float(entry))
+                            except ValueError: # if it is a token
+                                self.elements.append(0.0) # could have put anything
+                                self.tokenLocs[entry].append(len(self.elements)-1)
                                 # the -1 accounts for the fact we start @ 0
-                                break
-                
-                else
+                    break                
+
+                else:
                     print "\ninvalid number of elements passed,\
                             re-enter line: "
                     continue
    
+
+
         # print spaces to niceify input
             print('                          ')
    
         # prompt user for start,stop and step values 
-        for token in self.tokens
+        for token in self.tokens:
             errVal = False
             print('enter start,stop and step values for token "'+token+'" :') 
-            while(True)
-                raw_input() loop_vals
+            while True:
+                loop_vals = raw_input()
                 
-                if(len(loop_vals.split()) != 3)
+                if(len(loop_vals.split()) != 3):
                     print '\ninvalid number of inputs, re-enter: '
                     continue
-
-                for value in loop_vals.split()
+             
+                for value in loop_vals.split():
                     try:
                         float(value)
-                    except ValueError
+                    except ValueError:
                         print'\nnon-numeric input, re-enter: '
                         errVal = True
                         break
                 
-                if(errVal)
+                if(errVal):
                     continue
-                else
-                    for value in loop_vals.split()
+                else:
+                    if float(loop_vals.split()[0]) > float(loop_vals.split()[1]):
+                        print '\ninvalid range, re-enter all values: '
+                        continue
+                    elif float(loop_vals.split()[2]) == 0:
+                        print '\ninvalid step value, re-enter all values: '
+                        continue
+                    
+                    for value in loop_vals.split():
                         self.tokenRange[token].append(value)
                     break    
 
+        if(not(self.symmetric())):
+            print 'asymmetric hamiltonian parsed: please re-enter\n'
+            self.parse()
 
-    def symmetric(self)
+
+    def symmetric(self):
         '''
             Test for a symmetric hamiltonian
         '''
@@ -131,39 +154,52 @@ class hamiltonian:
         #           i.e. ham[i*size + j] == ham[j*size + i]
         #           if not then return false
         
-        for token in self.tokens:
-            if(len(self.tokens[token]) % 2 != 0)
-                return False # if the number of token entries for any given 
-                             # token is not even then cannot be symmetric
-            
-            for position in self.tokens[token]:
+        #for token in self.tokens:
+        #    if(len(self.tokens[token]) % 2 != 0):
+        #        return False # if the number of token entries for any given 
+        #                     # token is not even then cannot be symmetric
+        for token in self.tokens:    
+            for position in self.tokenLocs[token]:
                 row = position / self.size  # find the "row" of the element
                 col = position % self.size  # "column" of the element
-                if col*self.size + row not in self.tokens[token]: 
+                if col*self.size + row not in self.tokenLocs[token]: 
                     return False  # this is just taking the transpose
-                # i.e. if the element's transposed position is not also a token
-                # then the hamiltonian cannot be symmetric
+            # i.e. if the element's transposed position is not also the 
+            # same token then the hamiltonian cannot be symmetric
 
-        for row in range(self.size -1) # now check numerical values
-            for col in range(row+1, self.size)
-                if self.entries[row*self.size + col]\
-                == self.entries[col*self.size + row]
+        # NB: even though the embedded loop is slower, it means it is more
+        # evident what we are doing: also enables us to easily only choose
+        # the upper triangle to iterate through - making it faster overall
+        for row in range(self.size -1): # now check numerical values
+            for col in range(row+1, self.size):
+                if self.elements[row*self.size + col]\
+                == self.elements[col*self.size + row]:
                     continue
-                else
+                else:
                     return False
         
         return True
     
-    def assign(self,token,value)
+
+
+    def assign(self,token,value):
         '''
             assign the elements in 'token' to 'value'
         '''
 
         # iterate through tokenLocs(token)
         #    for each location, assign value to ham[loc]
- 
-        for ham.value
-    def print(self,fileName)
+        
+        if token not in token:
+            raise LookupError
+        elif value < 0:
+            raise ArithmeticError
+
+        for location in self.tokenLocs[token]:
+            self.elements[location] = value
+
+
+    def filePrint(self,fileName):
         ''' 
             Print the hamiltonian to a file in a format compatible with
             the huckel_energy program.
@@ -176,9 +212,28 @@ class hamiltonian:
         #         print ham[i*size + j]
         #     print "\n"
         # close file
+        try:
+             hamFile = open(fileName,'w')
+             hamFile.write(str(self.size)+'\n')
+             
+             #NB: I do not know whether embedded loops or a single loop with
+             # an IF statement would be more efficient. I think that the loops
+             # would be more inefficient, as python would use more stack to 
+             # keep the loop variables in scope, whereas IF statements are cheap
+
+             for row in range(self.size):
+                 for col in range(self.size):
+                     hamFile.write(str(self.elements[row*self.size + col])+' ') 
+                 hamFile.write('\n')
+
+             hamFile.close()
+             return 0
+
+        except TypeError:  # invalid filename type (not string) passed
+            return 1
 
 
-    def getTokenVal(self,string)
+    def getTokenVal(self,string):
         '''
             Return a list of the values of the tokens in the hamiltonian
         '''
@@ -187,9 +242,13 @@ class hamiltonian:
         #     return ham[tokenLocs[string][0]] 
         # else
         #     return BADNUM
-    
+        if string in self.tokens:
+                return self.elements[self.tokenLocs[string][0]]
+        else:
+                raise LookupError 
+        
 
-    def getTokenRange(self,string)
+    def getTokenRange(self,string):
         '''
             Return a list of form [start,stop,step] for token "string"
         '''
@@ -198,16 +257,26 @@ class hamiltonian:
         #     return tokenRange[string]
         # else
         #     return BADNUM
+        if string in self.tokens:
+            return self.tokenRange[string]
+        else:
+            return [] # the empty list
 
 
-    def getTokens(self)
+    def getTokens(self):
         return self.tokens
     
-    def getElement(self,i,j)
+    def getElement(self,i,j):
         '''
-            Return element i,j of the hamiltonian
+            Return element i,j of the hamiltonian. The "-1"s are an offset so
+            that the user can have a 1-based as opposed to 0-based index for
+            compatability with standard mathematical notation
         '''
-        if(self.size == 0)
-            # RETURN NAN
-        else    
-            return self.elements(i*size + j)
+
+        if(self.size == 0):
+            raise ArithmeticError
+        elif((i-1)*self.size + (j-1) > self.size*self.size -1):
+            raise LookupError
+        else:
+            return self.elements[(i-1)*self.size + (j-1)]
+          
