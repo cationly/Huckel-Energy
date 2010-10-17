@@ -1,0 +1,39 @@
+HUCKEL_ENERGY
+
+  A short F95 code to calculate the energy eigenvalues for a hamiltonian
+  for a simple molecule using Huckel theory. This code makes use of the LAPACK
+  and LBLAS Fortran libraries.
+  
+  We assume that all the bond lengths are the same so that the energies
+  can be given in units of the off-diagonal hamiltonian elements and the
+  0-energy taken to be the average energy (the diagonal hamiltonian elements)
+ 
+  COMPILING HUCKEL_ENERGY: huckel_energy has a makefile, and so GNU Make can be used
+                           to compile the program using the GNU Fortran compiler. Failing that, 
+                           first compile thedoublePrecision.f90 module, then the other modules 
+                           in arbitrary order, and finally the huckel_energy.f90 program itself.
+                           Finally create the executable by linking the object code with the 
+                           LAPACK and LBLAS libraries.
+
+                           This code has been tested and compiled on the CMTH Red Hat machines
+                           with GNU Fortran 4.1.2 and on Debian Squeeze with GNU Fortran 4.4.4
+ 
+  CALLING HUCKEL_ENERGY: /path/to/huckel:~$ ./huckel_energy $INFILE $OUTFILE $CALCMODE
+                         
+                          INFILE: the file to read the hamiltonian from. It MUST be formatted
+                                  so that the 1st line contains only the size of the hamiltonian
+                                  and subsequent lines contain a matrix of space-separated numbers
+                                  representing the hamiltonian in the Huckel Basis, with beta set
+                                  to 1 and alpha set to 0 (and all other elements 0)
+ 
+                         OUTFILE: the name of the file to have the results written to. Output is
+                                  formatted such that the first line contains a space separated
+                                  list of the hamiltonian's eigenvalues and (optionally) subsequent lines
+                                  contain an orthogonal matrix whose columns correspond to the eigenvectors
+                                  of the hamiltonian. 
+ 
+                        CALCMODE: A single character, either "N" or "V". "N" means that the output will
+                                  only contain the eigenvalues, "V" means that output will also contain the 
+                                  matrix of eigenvectors 
+     
+  EXAMPLES: the /examples directory contains a few example hamiltonians to test out the code 

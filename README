@@ -1,38 +1,57 @@
-HUCKEL_ENERGY
+HUCKEL
+~~~~~~
 
-  A short F95 code to calculate the energy eigenvalues for a hamiltonian
-  for a simple molecule using Huckel theory
-  
-  We assume that all the bond lengths are the same so that the energies
-  can be given in units of the off-diagonal hamiltonian elements and the
-  0-energy taken to be the average energy (the diagonal hamiltonian elements)
- 
-  COMPILING HUCKEL_ENERGY: huckel_energy has a makefile, and so GNU Make can be used
-                           to compile the program using the GNU Fortran compiler. Failing that, 
-                           first compile thedoublePrecision.f90 module, then the other modules 
-                           in arbitrary order, and finally the huckel_energy.f90 program itself.
-                           Finally create the executable by linking the object code with the 
-                           LAPACK and LBLAS libraries
+The "Huckel" code is a collection (2) of tools for analysing systems according to the Tight Binding, or Hückel, model.
 
-                           This code has been tested and compiled on the CMTH Red Hat machines
-                           with GNU Fortran 4.1.2 and on Debian Squeeze with GNU Fortran 4.4.4
- 
-  CALLING HUCKEL_ENERGY: /path/to/huckel:~$ ./huckel_energy $INFILE $OUTFILE $CALCMODE
-                         
-                          INFILE: the file to read the hamiltonian from. It MUST be formatted
-                                  so that the 1st line contains only the size of the hamiltonian
-                                  and subsequent lines contain a matrix of space-separated numbers
-                                  representing the hamiltonian in the Huckel Basis, with beta set
-                                  to 1 and alpha set to 0 (and all other elements 0)
- 
-                         OUTFILE: the name of the file to have the results written to. Output is
-                                  formatted such that the first line contains a space separated
-                                  list of the hamiltonian's eigenvalues and (optionally) subsequent lines
-                                  contain an orthogonal matrix whose columns correspond to the eigenvectors
-                                  of the hamiltonian. 
- 
-                        CALCMODE: A single character, either "N" or "V". "N" means that the output will
-                                  only contain the eigenvalues, "V" means that output will also contain the 
-                                  matrix of eigenvectors 
-     
-  EXAMPLES: the /examples directory contains a few example hamiltonians to test out the code 
+REPOSITORY CONTENTS
+~~~~~~~~~~~~~~~~~~~
+
+/ (root directory)
+\
+ |-- TODO (to-do list, for dev use only)
+ |
+ |-- makefile (file compatible with the GNU Make utility for easy compilation)
+ |
+ |-- examples/ (Directory of example hamiltonians for use with Huckel Energy)
+ |
+ |-- hamiltonians/ (Directory used by HuckelPlot for plot-file output (see docs)
+ |
+ |-- src/ (Directory containing the source for Huckel Energy
+ |
+ |-- scripts/ (Directory containing the HuckelPlot program and its dependencies,
+ |             as well as some other useful scripts for use with Huckel Energy)
+
+
+
+BACKGROUND
+~~~~~~~~~~
+
+Within the Tight Binding model we attempt to describe molecular wavefunctions by expressing them in terms of local atomic orbitals centred on the individual atoms in the given molecule. We approximate the Hamiltonian in this basis of localised orbitals by:
+
+H_ij = -t_ij
+
+Where T_ij = T when i & j are neighbouring sites and 0 otherwise.
+
+e.g. for a chain of 4 hydrogen atoms: 
+
+H--H--H 
+
+Our Tight Binding hamiltonian would have the form:
+
+    
+      /0 1 0 0\
+Ĥ = -t|1 0 1 0|
+      |0 1 0 1|
+      \0 0 1 0/
+
+
+THE CODES
+~~~~~~~~~
+
+The back-end code to this project is a Fortran90 code called "Huckel Energy", which calculates the eigenstate energies in terms of the parameter "t" and (optionally) the eigenstates themselves in the basis of atomic orbitals. This code is essentially a glorified matrix-diagonalisation program which uses the LAPACK and LBLAS libraries to do the computations fast. This code was originally written as an excercise in writing Fortran90 code, and as a proof of concept.
+
+The source for Huckel Energy is found in the /src directory, as is the README specific for the compilation and running of Huckel Energy.
+
+The "front-end" code is a python code called "HuckelPlot". It is, again, a fairly basic code which was written as a programming exercise but which nevertheless serves a useful purpose. HuckelPlot allows the user to specify a hamiltonian matrix to solve, but with variable parameters. Huckelplot then calculates the energies of the hamiltonian while varying the parameters between user defined limits. The output is an easily-graphable file which gives the user information about how the molecule's energy changes as the hamiltonian is altered. Coupled with knowledge of how the hamiltonian translates into real-space configuration of atoms then gives the user a tool to analyse molecules withing the Tight Binding approximation.
+
+The source for HuckelPlot is in the /scripts directory, and its README is found at the top of the huckelPlot.py file.
