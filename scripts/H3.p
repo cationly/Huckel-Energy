@@ -1,1 +1,0 @@
-plot "H3.out" using 1:2 , "H3.out" using 1:3, "H3.out" using 1:4
