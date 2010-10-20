@@ -30,19 +30,26 @@ Within the Tight Binding model we attempt to describe molecular wavefunctions by
 
 H_ij = -t_ij
 
-Where T_ij = T when i & j are neighbouring sites and 0 otherwise.
+Where t_ij = t when i & j are neighbouring sites and 0 otherwise.
 
 e.g. for a chain of 4 hydrogen atoms: 
 
-H--H--H 
+    H--H--H--H
 
-Our Tight Binding hamiltonian would have the form:
+    We would have a basis of atomic orbitals:
+
+    phi_1, phi_2, phi_3, phi_4
+
+    where phi_j is localised on the j^th H atom in the chain.
+
+    Our Tight Binding hamiltonian in this basis 
+    of localised orbitals would have the form:
 
     
-      /0 1 0 0\
-Ĥ = -t|1 0 1 0|
-      |0 1 0 1|
-      \0 0 1 0/
+          /0 1 0 0\
+    Ĥ = -t|1 0 1 0|
+          |0 1 0 1|
+          \0 0 1 0/
 
 
 THE CODES

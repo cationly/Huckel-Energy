@@ -8,15 +8,25 @@ HUCKEL_ENERGY
   can be given in units of the off-diagonal hamiltonian elements and the
   0-energy taken to be the average energy (the diagonal hamiltonian elements)
  
-  COMPILING HUCKEL_ENERGY: huckel_energy has a makefile, and so GNU Make can be used
-                           to compile the program using the GNU Fortran compiler. Failing that, 
-                           first compile thedoublePrecision.f90 module, then the other modules 
-                           in arbitrary order, and finally the huckel_energy.f90 program itself.
-                           Finally create the executable by linking the object code with the 
-                           LAPACK and LBLAS libraries.
+  COMPILING HUCKEL_ENERGY: huckel_energy has a makefile in the /src directory, and so compilation
+                           should be as simple as executing $make from the /src directory of the
+                           Huckel root directory.
 
-                           This code has been tested and compiled on the CMTH Red Hat machines
-                           with GNU Fortran 4.1.2 and on Debian Squeeze with GNU Fortran 4.4.4
+                           Huckel_energy being composed of a very modest number of modules it is unlikely
+                           that one will run into compatability issues on many platforms. That being said,
+                           huckel_energy does make use of the BLAS and LAPACK Fortran libraries, and any
+                           issues relating to "undefined symbols" will 99% of the time be due to badly
+                           installed libraries.
+
+                           The default compiler is the GNU Fortran compiler, which should be executed via
+                           the command $gfortran. It is highly likely that other popular compilers such as
+                           the INTEL Fortran compiler will also work, however when changing the makefile
+                           be sure to check that all the compiler flags are still valid.
+
+                           This code has been tested and compiled on the Imperial CollegeCMTH Red Hat 
+                           Enterpise Linux  machines with GNU Fortran 4.1.2 and on Debian Squeeze with
+                           GNU Fortran 4.4.4
+
  
   CALLING HUCKEL_ENERGY: /path/to/huckel:~$ ./huckel_energy $INFILE $OUTFILE $CALCMODE
                          

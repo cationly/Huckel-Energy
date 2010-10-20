@@ -1,0 +1,21 @@
+CFLAGS	makefile	/^CFLAGS= -Wall -g -c$/
+EXE	makefile	/^EXE=huckel_energy$/
+FC	makefile	/^FC=gfortran$/
+LFLAGS	makefile	/^LFLAGS= -Wall -g$/
+LIBS	makefile	/^LIBS= -llapack -lblas$/
+all	makefile	/^all: huckel_energy$/
+checkOrthogonal	matrixOp.f90	/^    subroutine checkOrthogonal(matrix,systemSize,e/
+clean	makefile	/^clean:$/
+diagonalize	matrixOp.f90	/^    subroutine diagonalize(toDiagonalize,eigenvalu/
+doublePrecision.o	makefile	/^doublePrecision.o: doublePrecision.f90$/
+getParams	parse.f90	/^    subroutine getParams(inFile,systemSize,calcMod/
+huckel_energy	makefile	/^huckel_energy: huckel_energy.o parse.o printing.o /
+huckel_energy.o	makefile	/^huckel_energy.o: doublePrecision.o parse.o printin/
+isSymmetric	matrixOp.f90	/^    subroutine isSymmetric(array,systemSize,exitSt/
+matrixOp.o	makefile	/^matrixOp.o: doublePrecision.o matrixOp.f90$/
+parse.o	makefile	/^parse.o: doublePrecision.o parse.f90$/
+parseArray	parse.f90	/^    subroutine parseArray(inFile,array,systemSize,/
+printMatrix	printing.f90	/^    subroutine printMatrix(matrix,matSize,outUnit,/
+printOutput	printing.f90	/^    subroutine printOutput(vector,matrix,systemSiz/
+printVector	printing.f90	/^    subroutine printVector(vector,vecSize,outUnit,/
+printing.o	makefile	/^printing.o: doublePrecision.o printing.f90$/
